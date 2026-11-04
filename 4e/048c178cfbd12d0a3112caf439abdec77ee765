@@ -1,0 +1,24 @@
+CHANGELOG.md
+  h_78c70b0a7ec70a 5-8
+LICENSE
+  h_78c70b0a7ec70a 3
+README.md
+  h_78c70b0a7ec70a 97
+README.zh-CN.md
+  h_78c70b0a7ec70a 221-222
+package.json
+  h_78c70b0a7ec70a 7
+packaging/THIRD_PARTY_NOTICES.md
+  h_78c70b0a7ec70a 3-4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "4e048c178cfbd12d0a3112caf439abdec77ee765",
+  "prompts": {},
+  "humans": {
+    "h_78c70b0a7ec70a": {
+      "author": "yizhouxw <54161870+yizhouxw@users.noreply.github.com>"
+    }
+  }
+}
