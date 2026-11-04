@@ -1,7 +1,7 @@
 {
   "name": "speek-coding",
-  "version": "0.5.3",
-  "description": "Private, push-to-talk coding dictation for macOS",
+  "version": "0.1.0",
+  "description": "Local-first, push-to-talk coding dictation for macOS",
   "type": "module",
   "license": "MIT",
   "author": "John Yin",
@@ -31,6 +31,8 @@
     "CONTRIBUTING.md",
     "SECURITY.md",
     "README.md",
+    "README.zh-CN.md",
+    "SUPPORT.md",
     "LICENSE"
   ],
   "bin": {

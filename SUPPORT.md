@@ -1,6 +1,6 @@
 # 获取帮助与反馈
 
-安装与日常使用见 [README](README.md)（[English](README.en.md)），已知排查步骤见[故障排查](docs/TROUBLESHOOTING.md)。请先运行 `speek status` 和 `speek doctor` 检查本机服务、权限及当前 Karabiner 规则。
+安装与日常使用见 [中文说明](README.zh-CN.md)（[English README](README.md)），已知排查步骤见[故障排查](docs/TROUBLESHOOTING.md)。请先运行 `speek status` 和 `speek doctor` 检查本机服务、权限及当前 Karabiner 规则。
 
 普通缺陷和功能建议请使用 [GitHub Issues](https://github.com/yizhouxw/speek-coding/issues)。维护者不承诺固定响应时间；请避免重复提交相同问题。
 

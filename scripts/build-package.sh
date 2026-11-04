@@ -175,7 +175,7 @@ PATH=/usr/bin:/bin "$BUNDLED_PYTHON" -m pip install \
 /usr/bin/ditto docs "$RESOURCES/docs"
 /bin/mkdir -p "$RESOURCES/scripts"
 /bin/cp scripts/local-asr-server.py scripts/speek-command.sh "$RESOURCES/scripts/"
-/bin/cp package.json package-lock.json README.md CHANGELOG.md LICENSE SECURITY.md "$RESOURCES/"
+/bin/cp package.json package-lock.json README.md README.zh-CN.md SUPPORT.md CHANGELOG.md LICENSE SECURITY.md "$RESOURCES/"
 /bin/cp packaging/THIRD_PARTY_NOTICES.md "$RESOURCES/"
 
 (
