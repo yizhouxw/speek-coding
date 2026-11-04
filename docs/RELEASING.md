@@ -24,11 +24,11 @@ git diff --check
 
 ## 构建与签名
 
-### GitHub Actions 开发预发布
+### GitHub Actions 常规 Release 与开发安装包
 
 `.github/workflows/release.yml` 在推送 `vX.Y.Z` 标签时运行，也可在 Actions 中选择已有标签手动重试。标签必须带注释，指向 GitHub `master` 的最新提交，并与 `package.json` 版本及 `CHANGELOG.md` 中非空的 `## [X.Y.Z]` 节一致。
 
-流水线分别在 arm64 和 Intel macOS 上运行测试、构建及包验证，全部成功后创建 GitHub **开发预发布**，上传文件名带 `-dev-` 的两个安装包和 `SHA256SUMS.txt`。安装器未签名、未公证；标准干净 runner 没有本机开发身份时，App 使用 ad-hoc 签名。仅供开发验证，不应作为正式发布。macOS 可能阻止安装或运行，升级后权限也可能需要重新授权。不需要配置 Apple 签名凭据。
+流水线分别在 arm64 和 Intel macOS 上运行测试、构建及包验证，全部成功后创建 GitHub **常规 Release** 并标记为 Latest，上传文件名带 `-dev-` 的两个安装包和 `SHA256SUMS.txt`。安装器未签名、未公证；标准干净 runner 没有本机开发身份时，App 使用 ad-hoc 签名。仅供开发验证，不应作为正式发布。macOS 可能阻止安装或运行，升级后权限也可能需要重新授权。不需要配置 Apple 签名凭据。
 
 确认目标 GitHub 仓库及发布权限，更新版本和变更记录，提交并推送后执行：
 
@@ -37,7 +37,7 @@ git tag -a vX.Y.Z -m 'SpeekCoding vX.Y.Z'
 git push <github-remote> vX.Y.Z
 ```
 
-将示例版本和远程名替换为实际值。不要重用已发布的标签或覆盖已有 Release；日常开发仍直接推送到所有已配置远端的 `master`。此开发包不得提升为正式发布，正式分发必须另行使用 Developer ID 签名及公证。
+将示例版本和远程名替换为实际值。不要重用已发布的标签或覆盖已有 Release；日常开发仍直接推送到所有已配置远端的 `master`。此开发包不能被描述为经过 Apple 分发验证的安装包；正式二进制分发必须另行使用 Developer ID 签名及公证。
 
 ### 本地构建
 
@@ -69,4 +69,4 @@ shasum -a 256 SpeekCoding-<version>-<arch>.pkg
 - 确认安装包中的第三方许可证文件完整；模型权重不随包分发，并提醒用户遵守模型许可证。
 - 安装、升级、`speek doctor`、`speek test-record` 和卸载各验证一次，再将版本标记为稳定。
 
-Ad-hoc 签名包只能作为标明用途的开发预发布产物，不能作为正式 Release。
+GitHub Release 的常规／预发布标记与 Apple 分发签名是两回事。常规 Release 可以附带明确标为 `-dev-` 的开发安装包，但必须注明签名与公证限制，不能将这些附件描述为已通过 Apple 验证的正式分发包。

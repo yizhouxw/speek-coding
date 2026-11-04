@@ -98,7 +98,7 @@ jobs:
           pattern: package-*
           path: dist
           merge-multiple: true
-      - name: Publish GitHub pre-release
+      - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
@@ -110,5 +110,5 @@ jobs:
           test -f "dist/$arm" && test -f "dist/$intel"
           (cd dist && sha256sum "$arm" "$intel" > SHA256SUMS.txt)
           node scripts/release-notes.mjs "$RELEASE_TAG" > release-notes.md
-          printf '\n开发预发布：安装包未签名、未公证，App 使用临时 ad-hoc 签名；仅用于开发验证，不适合作为正式发布，也不能保证升级后权限保持不变。macOS 可能阻止安装或运行。\n\n最低系统版本：macOS 13。模型权重不包含在安装包中。\n' >> release-notes.md
-          gh release create "$RELEASE_TAG" "dist/$arm" "dist/$intel" dist/SHA256SUMS.txt --verify-tag --prerelease --title "SpeekCoding $version (development)" --notes-file release-notes.md
+          printf '\n安装包说明：附件中带 -dev- 的安装包未签名、未公证，App 使用临时 ad-hoc 签名；仅用于开发验证，升级后可能需要重新授权。macOS 可能阻止安装或运行。\n\n最低系统版本：macOS 13。模型权重不包含在安装包中。\n' >> release-notes.md
+          gh release create "$RELEASE_TAG" "dist/$arm" "dist/$intel" dist/SHA256SUMS.txt --verify-tag --latest --title "SpeekCoding $version" --notes-file release-notes.md

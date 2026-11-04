@@ -34,7 +34,7 @@
 - 检查托管平台上的 Release、Actions 日志与产物、缓存、Issue/附件和其他公开入口；它们不属于普通 Git 工作树扫描范围。
 - 确认 [安全报告入口](../SECURITY.md)、[贡献流程](../CONTRIBUTING.md)、[帮助入口](../SUPPORT.md) 和[行为准则](../CODE_OF_CONDUCT.md) 可用。
 - 公开 GitHub 仓库后，在平台设置中启用私密漏洞报告及可用的 secret scanning / push protection。是否公开由仓库所有者决定，代码清理不会自动更改可见性。
-- 未经 Developer ID 签名与公证的包必须标为开发预发布，不能宣称为稳定分发包。
+- 未经 Developer ID 签名与公证的包必须明确标为开发安装包，并注明签名与公证限制。GitHub Release 是否标为预发布不能代替二进制签名验证。
 
 ## 历史清理的边界
 

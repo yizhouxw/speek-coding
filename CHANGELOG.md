@@ -2,9 +2,11 @@
 
 Public releases follow [Semantic Versioning](https://semver.org/). Version numbering restarts at `0.1.0` for the first public release from the cleaned source history.
 
-## [Unreleased]
+## [0.1.1] - 2026-11-04
 
 - Localize the menu and its dialogs in English, Simplified Chinese, and Traditional Chinese. Follow macOS language preferences by default, with a persistent language selector under Feature Settings.
+
+- Publish as a regular GitHub Release and mark it Latest. Attached `-dev-` installers remain development builds without Developer ID signing or notarization.
 
 ## [0.1.0] - 2026-11-04
 
