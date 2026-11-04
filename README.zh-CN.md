@@ -218,3 +218,5 @@ SpeekCoding 与 Apple、DJI、Karabiner-Elements、OpenAI 及模型提供方均�
 ## License
 
 [MIT](LICENSE)
+
+SpeekCoding 的项目作者为 [yizhouxw](https://github.com/yizhouxw)。许可证同时保留上游 John Yin 的版权声明，详见[第三方声明](packaging/THIRD_PARTY_NOTICES.md)。

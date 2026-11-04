@@ -1,5 +1,7 @@
 # Third-party notices
 
+SpeekCoding's project author is yizhouxw. The hardware-trigger workflow originated from [Johnixr/dji-mic-dictation](https://github.com/Johnixr/dji-mic-dictation), whose MIT license carries `Copyright (c) 2026 John Yin`. That upstream copyright notice is retained alongside SpeekCoding's copyright notice in the root `LICENSE`; the package author field identifies the SpeekCoding project author rather than the upstream author.
+
 SpeekCoding's self-contained macOS package includes these third-party runtimes and libraries:
 
 - Node.js, licensed under the MIT license and additional licenses listed in the bundled `Node.js-LICENSE` file.

@@ -4,7 +4,7 @@
   "description": "Local-first, push-to-talk coding dictation for macOS",
   "type": "module",
   "license": "MIT",
-  "author": "John Yin",
+  "author": "yizhouxw",
   "private": true,
   "os": [
     "darwin"

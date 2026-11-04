@@ -94,6 +94,6 @@ Maintainers work directly on `master`; external contributions start with an issu
 
 ## License and acknowledgments
 
-[MIT](LICENSE). Third-party runtime notices are in [packaging/THIRD_PARTY_NOTICES.md](packaging/THIRD_PARTY_NOTICES.md). Models and Karabiner-Elements are obtained separately and have their own licenses.
+[MIT](LICENSE). SpeekCoding's project author is [yizhouxw](https://github.com/yizhouxw). The upstream John Yin copyright notice is retained in the license. Third-party runtime notices are in [packaging/THIRD_PARTY_NOTICES.md](packaging/THIRD_PARTY_NOTICES.md). Models and Karabiner-Elements are obtained separately and have their own licenses.
 
 The hardware-trigger workflow originated from [Johnixr/dji-mic-dictation](https://github.com/Johnixr/dji-mic-dictation). SpeekCoding is not affiliated with or endorsed by Apple, DJI, Karabiner-Elements, OpenAI, or model providers.

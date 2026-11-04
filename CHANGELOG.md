@@ -2,6 +2,10 @@
 
 Public releases follow [Semantic Versioning](https://semver.org/). Version numbering restarts at `0.1.0` for the first public release from the cleaned source history.
 
+## [Unreleased]
+
+- Identify SpeekCoding's project author as yizhouxw in package metadata and copyright notices, while retaining the upstream John Yin copyright notice and clarifying attribution.
+
 ## [0.1.1] - 2026-11-04
 
 - Localize the menu and its dialogs in English, Simplified Chinese, and Traditional Chinese. Follow macOS language preferences by default, with a persistent language selector under Feature Settings.
