@@ -1,0 +1,29 @@
+.github/workflows/release.yml
+  s_12896811456c5e::t_1e6ef24f3774d8 101,113-114
+CHANGELOG.md
+  s_12896811456c5e::t_aa39ec05be0280 5,9-10
+docs/OPEN_SOURCE.md
+  s_12896811456c5e::t_2097a4b3da1507 37
+docs/RELEASING.md
+  s_12896811456c5e::t_caee3eda3336c2 27,31,40,72
+package-lock.json
+  s_12896811456c5e::t_06a8e2d7cc1429 3,9
+package.json
+  s_12896811456c5e::t_2b57fb7a2df1c1 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "47ada22bce5271e66afe0ef5de0e24d0e489606f",
+  "prompts": {},
+  "sessions": {
+    "s_12896811456c5e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a488-0dce-70d1-87f0-7863d614cad8",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "yizhouxw <54161870+yizhouxw@users.noreply.github.com>"
+    }
+  }
+}
