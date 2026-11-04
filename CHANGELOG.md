@@ -2,6 +2,10 @@
 
 Public releases follow [Semantic Versioning](https://semver.org/). Version numbering restarts at `0.1.0` for the first public release from the cleaned source history.
 
+## [Unreleased]
+
+- Localize the menu and its dialogs in English, Simplified Chinese, and Traditional Chinese. Follow macOS language preferences by default, with a persistent language selector under Feature Settings.
+
 ## [0.1.0] - 2026-11-04
 
 - First public source release under the MIT license, with an English default README and a complete Chinese guide.

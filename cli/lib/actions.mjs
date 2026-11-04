@@ -352,6 +352,12 @@ async function installSpeekCodingApp(runtime) {
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>zh-Hans</string>
+		<string>zh-Hant</string>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>SpeekCoding</string>
 	<key>CFBundleIdentifier</key>

@@ -29,7 +29,7 @@ Select a microphone in the menu bar and grant the permissions shown there. Focus
 speek setup --trigger-mode keyboard+dji --input-device "DJI Mic Mini"
 ```
 
-By default, SpeekCoding pastes and presses Return. Uncheck **自动发送（粘贴时附加回车）** under **功能设置** in the menu to paste without Return. Delivery can also be configured from the CLI:
+By default, SpeekCoding pastes and presses Return. Uncheck **Auto-send (press Return after pasting)** under **Feature Settings** in the menu to paste without Return. Delivery can also be configured from the CLI:
 
 ```bash
 speek config --delivery-mode paste_only
@@ -38,6 +38,12 @@ speek config --delivery-mode paste_and_send
 ```
 
 Settings apply to the next recording. A recording keeps the original target application's process ID; delivery fails if that process exits. It is not redirected to whichever application later has focus.
+
+## Menu language
+
+The menu and its dialogs support English, Simplified Chinese, and Traditional Chinese. By default, **Feature Settings → Language → Follow macOS** uses the first supported language in your macOS preferred language list. Chinese preferences for Taiwan, Hong Kong, and Macao select Traditional Chinese; unsupported languages fall back to English when no supported preference is available.
+
+Choose **简体中文**, **繁體中文**, or **English** in that submenu to override the system language. The choice takes effect without restarting and is remembered after relaunch. Choose **Follow macOS** to restore the default. Menu language is independent of the ASR language; microphone device names come from macOS or the device.
 
 ## Common commands
 

@@ -190,6 +190,144 @@ private func saveConfigValues(_ values: [String: String]) throws {
 	try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
 }
 
+// MARK: - Menu localization
+
+private enum MenuLanguage: String, CaseIterable {
+	case system
+	case simplifiedChinese = "zh-Hans"
+	case traditionalChinese = "zh-Hant"
+	case english = "en"
+
+	static let defaultsKey = "menuLanguage"
+
+	static func selected(in defaults: UserDefaults = .standard) -> MenuLanguage {
+		MenuLanguage(rawValue: defaults.string(forKey: defaultsKey) ?? "") ?? .system
+	}
+
+	func resolved(preferredLanguages: [String] = Locale.preferredLanguages) -> MenuLanguage {
+		guard self == .system else { return self }
+		for identifier in preferredLanguages {
+			let parts = identifier.lowercased().replacingOccurrences(of: "_", with: "-").split(separator: "-")
+			if parts.first == "en" { return .english }
+			guard parts.first == "zh" else { continue }
+			if parts.contains("hans") { return .simplifiedChinese }
+			if parts.contains("hant") || parts.contains(where: { ["tw", "hk", "mo"].contains($0) }) {
+				return .traditionalChinese
+			}
+			return .simplifiedChinese
+		}
+		return .english
+	}
+
+	var displayName: String {
+		switch self {
+		case .system: return menuText(.followSystem)
+		case .simplifiedChinese: return "简体中文"
+		case .traditionalChinese: return "繁體中文"
+		case .english: return "English"
+		}
+	}
+}
+
+private enum MenuText: String, CaseIterable {
+	case microphoneInput = "Microphone Input"
+	case systemMicrophone = "System Default Microphone"
+	case disconnected = "%@ (disconnected)"
+	case featureSettings = "Feature Settings"
+	case autoSend = "Auto-send (press Return after pasting)"
+	case autoSendHelp = "When checked, paste and press Return. When unchecked, paste only."
+	case language = "Language"
+	case followSystem = "Follow macOS"
+	case languageHelp = "Change the menu language without restarting the app."
+	case permissionSettings = "Permissions"
+	case allowed = "Allowed"
+	case clickToAllow = "Click to Allow"
+	case restricted = "Restricted by System"
+	case notAllowed = "Not Allowed"
+	case microphoneStatus = "Microphone: %@…"
+	case microphoneHelp = "Allow SpeekCoding to record audio"
+	case accessibilityRequired = "Allow Accessibility"
+	case eventPostingRequired = "Allow Simulated Keystrokes"
+	case deliveryStatus = "Automatic Paste and Send: %@…"
+	case deliveryHelp = "Copy transcription to the clipboard, then paste it automatically. Auto-send also presses Return. Clipboard-only mode does not require this permission."
+	case karabinerDownloading = "Karabiner-Elements: Downloading Installer…"
+	case karabinerInstalled = "Karabiner-Elements: Installed (Open Settings)…"
+	case karabinerMissing = "Karabiner-Elements: Not Installed (Download)…"
+	case karabinerHelp = "Global shortcuts and the DJI Mic button require Karabiner-Elements"
+	case quit = "Quit SpeekCoding"
+	case karabinerOpenFailed = "Could not open Karabiner-Elements."
+	case karabinerInstall = "Install Karabiner-Elements"
+	case karabinerGuide = "SpeekCoding uses Karabiner-Elements for global shortcuts and the DJI Mic button. The installer will be downloaded from the official website and opened. After installation, open Karabiner-Elements, allow background services, Accessibility, and Input Monitoring as prompted, then run SpeekCoding setup again."
+	case downloadInstaller = "Download Installer"
+	case cancel = "Cancel"
+	case downloadFailed = "Download failed. Check your network connection."
+	case signatureInvalid = "Installer signature verification failed."
+	case installerOpenFailed = "Could not open the Karabiner-Elements installer."
+	case installerFailed = "Could not prepare or verify the installer."
+	case karabinerError = "Could Not Prepare Karabiner-Elements"
+	case websiteSuggestion = "%@\nYou can download and install it from the official website."
+	case openWebsite = "Open Website"
+	case microphoneSaveFailed = "Could Not Save Microphone Settings"
+	case autoSendSaveFailed = "Could Not Save Auto-send Settings"
+
+	var chinese: (simplified: String, traditional: String) {
+		switch self {
+		case .microphoneInput: return ("麦克风输入", "麥克風輸入")
+		case .systemMicrophone: return ("系统默认麦克风", "系統預設麥克風")
+		case .disconnected: return ("%@（未连接）", "%@（未連接）")
+		case .featureSettings: return ("功能设置", "功能設定")
+		case .autoSend: return ("自动发送（粘贴时附加回车）", "自動傳送（貼上時附加 Return）")
+		case .autoSendHelp: return ("勾选时粘贴后按回车；取消勾选时仅粘贴。", "勾選時貼上後按 Return；取消勾選時僅貼上。")
+		case .language: return ("语言", "語言")
+		case .followSystem: return ("跟随 macOS", "跟隨 macOS")
+		case .languageHelp: return ("更改菜单语言，无需重启应用。", "變更選單語言，無需重新啟動應用程式。")
+		case .permissionSettings: return ("权限设置", "權限設定")
+		case .allowed: return ("已允许", "已允許")
+		case .clickToAllow: return ("点击授权", "點按以授權")
+		case .restricted: return ("受系统限制", "受系統限制")
+		case .notAllowed: return ("未允许", "未允許")
+		case .microphoneStatus: return ("麦克风：%@…", "麥克風：%@…")
+		case .microphoneHelp: return ("允许 SpeekCoding 录制语音", "允許 SpeekCoding 錄製語音")
+		case .accessibilityRequired: return ("需要允许控制电脑", "需要允許控制電腦")
+		case .eventPostingRequired: return ("需要允许模拟按键", "需要允許模擬按鍵")
+		case .deliveryStatus: return ("自动粘贴和发送：%@…", "自動貼上與傳送：%@…")
+		case .deliveryHelp: return ("转写文字先复制到剪贴板，再自动粘贴；发送模式还会按回车。仅复制到剪贴板无需此权限。", "轉寫文字先複製到剪貼簿，再自動貼上；傳送模式還會按 Return。僅複製到剪貼簿無需此權限。")
+		case .karabinerDownloading: return ("Karabiner-Elements：正在下载安装包…", "Karabiner-Elements：正在下載安裝程式…")
+		case .karabinerInstalled: return ("Karabiner-Elements：已安装（打开设置）…", "Karabiner-Elements：已安裝（開啟設定）…")
+		case .karabinerMissing: return ("Karabiner-Elements：未安装（下载安装）…", "Karabiner-Elements：未安裝（下載安裝）…")
+		case .karabinerHelp: return ("全局按键和 DJI Mic 按钮需要 Karabiner-Elements", "全域快捷鍵與 DJI Mic 按鈕需要 Karabiner-Elements")
+		case .quit: return ("退出 SpeekCoding", "結束 SpeekCoding")
+		case .karabinerOpenFailed: return ("无法打开 Karabiner-Elements。", "無法開啟 Karabiner-Elements。")
+		case .karabinerInstall: return ("安装 Karabiner-Elements", "安裝 Karabiner-Elements")
+		case .karabinerGuide: return ("SpeekCoding 使用 Karabiner-Elements 接收全局按键和 DJI Mic 按钮。将从官方网站下载并打开安装器。安装后请打开 Karabiner-Elements，按提示允许后台服务、辅助功能和输入监控，再重新运行 SpeekCoding 设置。", "SpeekCoding 使用 Karabiner-Elements 接收全域快捷鍵與 DJI Mic 按鈕。將從官方網站下載並開啟安裝程式。安裝後請開啟 Karabiner-Elements，依提示允許背景服務、輔助使用與輸入監控，再重新執行 SpeekCoding 設定。")
+		case .downloadInstaller: return ("下载安装包", "下載安裝程式")
+		case .cancel: return ("取消", "取消")
+		case .downloadFailed: return ("下载未成功，请检查网络连接。", "下載失敗，請檢查網路連線。")
+		case .signatureInvalid: return ("安装包签名验证失败。", "安裝程式簽章驗證失敗。")
+		case .installerOpenFailed: return ("无法打开 Karabiner-Elements 安装器。", "無法開啟 Karabiner-Elements 安裝程式。")
+		case .installerFailed: return ("无法准备或验证安装包。", "無法準備或驗證安裝程式。")
+		case .karabinerError: return ("无法准备 Karabiner-Elements", "無法準備 Karabiner-Elements")
+		case .websiteSuggestion: return ("%@\n可以从官方网站下载并安装。", "%@\n可以從官方網站下載並安裝。")
+		case .openWebsite: return ("打开官网", "開啟官網")
+		case .microphoneSaveFailed: return ("无法保存麦克风设置", "無法儲存麥克風設定")
+		case .autoSendSaveFailed: return ("无法保存自动发送设置", "無法儲存自動傳送設定")
+		}
+	}
+
+	func text(in language: MenuLanguage) -> String {
+		switch language {
+		case .simplifiedChinese: return chinese.simplified
+		case .traditionalChinese: return chinese.traditional
+		case .english, .system: return rawValue
+		}
+	}
+}
+
+private func menuText(_ key: MenuText, _ arguments: CVarArg...) -> String {
+	let text = key.text(in: MenuLanguage.selected().resolved())
+	return arguments.isEmpty ? text : String(format: text, arguments: arguments)
+}
+
 private struct AgentConfig {
 	let asrAPIURL: String
 	let asrModel: String
@@ -1666,12 +1804,12 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 
 	func menuWillOpen(_ menu: NSMenu) {
 		menu.removeAllItems()
-		let heading = NSMenuItem(title: "麦克风输入", action: nil, keyEquivalent: "")
+		let heading = NSMenuItem(title: menuText(.microphoneInput), action: nil, keyEquivalent: "")
 		heading.isEnabled = false
 		menu.addItem(heading)
 		let config = AgentConfig.load()
 		let selected = config.audioInputDeviceName.trimmingCharacters(in: .whitespacesAndNewlines)
-		let defaultItem = NSMenuItem(title: "系统默认麦克风", action: #selector(selectMicrophone(_:)), keyEquivalent: "")
+		let defaultItem = NSMenuItem(title: menuText(.systemMicrophone), action: #selector(selectMicrophone(_:)), keyEquivalent: "")
 		defaultItem.target = self
 		defaultItem.representedObject = ""
 		defaultItem.state = selected.isEmpty && config.audioInputDeviceIndex.isEmpty ? .on : .off
@@ -1685,54 +1823,67 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 			menu.addItem(choice)
 		}
 		if !selected.isEmpty && !devices.contains(where: { $0.localizedName.caseInsensitiveCompare(selected) == .orderedSame }) {
-			let missing = NSMenuItem(title: "\(selected)（未连接）", action: nil, keyEquivalent: "")
+			let missing = NSMenuItem(title: menuText(.disconnected, selected), action: nil, keyEquivalent: "")
 			missing.isEnabled = false
 			missing.state = .on
 			menu.addItem(missing)
 		}
 		menu.addItem(.separator())
-		let featuresHeading = NSMenuItem(title: "功能设置", action: nil, keyEquivalent: "")
+		let featuresHeading = NSMenuItem(title: menuText(.featureSettings), action: nil, keyEquivalent: "")
 		featuresHeading.isEnabled = false
 		menu.addItem(featuresHeading)
-		let autoSend = NSMenuItem(title: "自动发送（粘贴时附加回车）", action: #selector(toggleAutoSend(_:)), keyEquivalent: "")
+		let autoSend = NSMenuItem(title: menuText(.autoSend), action: #selector(toggleAutoSend(_:)), keyEquivalent: "")
 		autoSend.target = self
 		autoSend.state = config.deliveryMode == "clipboard_only" ? .mixed : (config.deliveryMode == "paste_and_send" ? .on : .off)
-		autoSend.toolTip = "勾选时粘贴后按回车；取消勾选时仅粘贴。"
+		autoSend.toolTip = menuText(.autoSendHelp)
 		menu.addItem(autoSend)
+		let languageItem = NSMenuItem(title: menuText(.language), action: nil, keyEquivalent: "")
+		languageItem.toolTip = menuText(.languageHelp)
+		let languages = NSMenu(title: menuText(.language))
+		let selectedLanguage = MenuLanguage.selected()
+		for language in MenuLanguage.allCases {
+			let choice = NSMenuItem(title: language.displayName, action: #selector(selectMenuLanguage(_:)), keyEquivalent: "")
+			choice.target = self
+			choice.representedObject = language.rawValue
+			choice.state = language == selectedLanguage ? .on : .off
+			languages.addItem(choice)
+		}
+		languageItem.submenu = languages
+		menu.addItem(languageItem)
 		menu.addItem(.separator())
-		let permissionsHeading = NSMenuItem(title: "权限设置", action: nil, keyEquivalent: "")
+		let permissionsHeading = NSMenuItem(title: menuText(.permissionSettings), action: nil, keyEquivalent: "")
 		permissionsHeading.isEnabled = false
 		menu.addItem(permissionsHeading)
 		let microphone = AVCaptureDevice.authorizationStatus(for: .audio)
 		let microphoneLabel: String
 		switch microphone {
-		case .authorized: microphoneLabel = "已允许"
-		case .notDetermined: microphoneLabel = "点击授权"
-		case .restricted: microphoneLabel = "受系统限制"
-		default: microphoneLabel = "未允许"
+		case .authorized: microphoneLabel = menuText(.allowed)
+		case .notDetermined: microphoneLabel = menuText(.clickToAllow)
+		case .restricted: microphoneLabel = menuText(.restricted)
+		default: microphoneLabel = menuText(.notAllowed)
 		}
-		let microphonePermission = NSMenuItem(title: "麦克风：\(microphoneLabel)…", action: #selector(openMicrophonePermission), keyEquivalent: "")
+		let microphonePermission = NSMenuItem(title: menuText(.microphoneStatus, microphoneLabel), action: #selector(openMicrophonePermission), keyEquivalent: "")
 		microphonePermission.target = self
-		microphonePermission.toolTip = "允许 SpeekCoding 录制语音"
+		microphonePermission.toolTip = menuText(.microphoneHelp)
 		menu.addItem(microphonePermission)
 		let canControlApps = AXIsProcessTrusted()
 		let canPostEvents = CGPreflightPostEventAccess()
-		let deliveryPermissionStatus = !canControlApps ? "需要允许控制电脑" : (!canPostEvents ? "需要允许模拟按键" : "已允许")
-		let accessibilityPermission = NSMenuItem(title: "自动粘贴和发送：\(deliveryPermissionStatus)…", action: #selector(openAccessibilityPermission), keyEquivalent: "")
+		let deliveryPermissionStatus = !canControlApps ? menuText(.accessibilityRequired) : (!canPostEvents ? menuText(.eventPostingRequired) : menuText(.allowed))
+		let accessibilityPermission = NSMenuItem(title: menuText(.deliveryStatus, deliveryPermissionStatus), action: #selector(openAccessibilityPermission), keyEquivalent: "")
 		accessibilityPermission.target = self
-		accessibilityPermission.toolTip = "转写文字先复制到剪贴板，再自动粘贴；发送模式还会按回车。仅复制到剪贴板无需此权限。"
+		accessibilityPermission.toolTip = menuText(.deliveryHelp)
 		menu.addItem(accessibilityPermission)
 		menu.addItem(.separator())
 		let karabinerInstalled = FileManager.default.isExecutableFile(atPath: karabinerCLI)
-		let karabinerTitle = downloadingKarabiner ? "Karabiner-Elements：正在下载安装包…" :
-			(karabinerInstalled ? "Karabiner-Elements：已安装（打开设置）…" : "Karabiner-Elements：未安装（下载安装）…")
+		let karabinerTitle = downloadingKarabiner ? menuText(.karabinerDownloading) :
+			(karabinerInstalled ? menuText(.karabinerInstalled) : menuText(.karabinerMissing))
 		let karabinerItem = NSMenuItem(title: karabinerTitle, action: #selector(openKarabiner), keyEquivalent: "")
 		karabinerItem.target = self
 		karabinerItem.isEnabled = !downloadingKarabiner
-		karabinerItem.toolTip = "全局按键和 DJI Mic 按钮需要 Karabiner-Elements"
+		karabinerItem.toolTip = menuText(.karabinerHelp)
 		menu.addItem(karabinerItem)
 		menu.addItem(.separator())
-		let quit = NSMenuItem(title: "退出 SpeekCoding", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+		let quit = NSMenuItem(title: menuText(.quit), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
 		menu.addItem(quit)
 	}
 
@@ -1759,15 +1910,15 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 	@objc private func openKarabiner() {
 		if FileManager.default.isExecutableFile(atPath: karabinerCLI) {
 			let application = URL(fileURLWithPath: "/Applications/Karabiner-Elements.app")
-			if !NSWorkspace.shared.open(application) { showKarabinerError("无法打开 Karabiner-Elements。") }
+			if !NSWorkspace.shared.open(application) { showKarabinerError(menuText(.karabinerOpenFailed)) }
 			return
 		}
 		guard !downloadingKarabiner else { return }
 		let guide = NSAlert()
-		guide.messageText = "安装 Karabiner-Elements"
-		guide.informativeText = "SpeekCoding 使用 Karabiner-Elements 接收全局按键和 DJI Mic 按钮。将从官方网站下载并打开安装器。安装后请打开 Karabiner-Elements，按提示允许后台服务、辅助功能和输入监控，再重新运行 SpeekCoding 设置。"
-		guide.addButton(withTitle: "下载安装包")
-		guide.addButton(withTitle: "取消")
+		guide.messageText = menuText(.karabinerInstall)
+		guide.informativeText = menuText(.karabinerGuide)
+		guide.addButton(withTitle: menuText(.downloadInstaller))
+		guide.addButton(withTitle: menuText(.cancel))
 		guard guide.runModal() == .alertFirstButtonReturn else { return }
 		downloadingKarabiner = true
 		let task = URLSession.shared.downloadTask(with: karabinerDownload) { [weak self] file, response, error in
@@ -1778,7 +1929,7 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 				if let error { throw error }
 				guard let response = response as? HTTPURLResponse, (200..<300).contains(response.statusCode),
 					response.url?.scheme?.lowercased() == "https", let file else {
-					throw failure("KARABINER_DOWNLOAD_FAILED", "下载未成功，请检查网络连接。")
+					throw failure("KARABINER_DOWNLOAD_FAILED", menuText(.downloadFailed))
 				}
 				let directory = FileManager.default.temporaryDirectory.appendingPathComponent("speek-karabiner-\(UUID().uuidString)", isDirectory: true)
 				try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
@@ -1793,12 +1944,12 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 				let signature = try self.runInstallerTool("/usr/sbin/pkgutil", ["--check-signature", package.path])
 				guard signature.contains("signed by a developer certificate issued by Apple for distribution"),
 					signature.contains("Developer ID Installer: Fumihiko Takayama (G43BCU2T37)") else {
-					throw failure("KARABINER_SIGNATURE_INVALID", "安装包签名验证失败。")
+					throw failure("KARABINER_SIGNATURE_INVALID", menuText(.signatureInvalid))
 				}
 				try self.runInstallerTool("/usr/sbin/spctl", ["--assess", "--type", "install", package.path])
 				DispatchQueue.main.async {
 					self.downloadingKarabiner = false
-					if !NSWorkspace.shared.open(package) { self.showKarabinerError("无法打开 Karabiner-Elements 安装器。") }
+					if !NSWorkspace.shared.open(package) { self.showKarabinerError(menuText(.installerOpenFailed)) }
 				}
 			} catch {
 				if let mount = mountedImage { _ = try? self.runInstallerTool("/usr/bin/hdiutil", ["detach", mount.path]) }
@@ -1822,16 +1973,16 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 		try process.run()
 		let data = output.fileHandleForReading.readDataToEndOfFile()
 		process.waitUntilExit()
-		guard process.terminationStatus == 0 else { throw failure("KARABINER_INSTALLER_FAILED", "无法准备或验证安装包。") }
+		guard process.terminationStatus == 0 else { throw failure("KARABINER_INSTALLER_FAILED", menuText(.installerFailed)) }
 		return String(data: data, encoding: .utf8) ?? ""
 	}
 
 	private func showKarabinerError(_ message: String) {
 		let alert = NSAlert()
-		alert.messageText = "无法准备 Karabiner-Elements"
-		alert.informativeText = "\(message)\n可以从官方网站下载并安装。"
-		alert.addButton(withTitle: "打开官网")
-		alert.addButton(withTitle: "取消")
+		alert.messageText = menuText(.karabinerError)
+		alert.informativeText = menuText(.websiteSuggestion, message)
+		alert.addButton(withTitle: menuText(.openWebsite))
+		alert.addButton(withTitle: menuText(.cancel))
 		if alert.runModal() == .alertFirstButtonReturn { NSWorkspace.shared.open(karabinerWebsite) }
 	}
 
@@ -1840,9 +1991,16 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 		do { try saveInputDevice(name) }
 		catch {
 			let alert = NSAlert(error: error)
-			alert.messageText = "无法保存麦克风设置"
+			alert.messageText = menuText(.microphoneSaveFailed)
 			alert.runModal()
 		}
+	}
+
+	@objc private func selectMenuLanguage(_ sender: NSMenuItem) {
+		guard let identifier = sender.representedObject as? String,
+			let language = MenuLanguage(rawValue: identifier) else { return }
+		UserDefaults.standard.set(language.rawValue, forKey: MenuLanguage.defaultsKey)
+		if let menu = statusItem?.menu { menuWillOpen(menu) }
 	}
 
 	@objc private func toggleAutoSend(_ sender: NSMenuItem) {
@@ -1850,7 +2008,7 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 		do { try saveConfigValues(["SPEEK_DELIVERY_MODE": "'\(mode)'"]) }
 		catch {
 			let alert = NSAlert(error: error)
-			alert.messageText = "无法保存自动发送设置"
+			alert.messageText = menuText(.autoSendSaveFailed)
 			alert.runModal()
 		}
 	}
@@ -1901,6 +2059,45 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 		}
 		return request
 	}
+}
+
+private func runMenuLocalizationSelfTest() {
+	let cases: [([String], MenuLanguage)] = [
+		(["zh-Hans-CN"], .simplifiedChinese), (["zh-CN"], .simplifiedChinese),
+		(["zh-SG"], .simplifiedChinese), (["zh"], .simplifiedChinese),
+		(["zh-Hant-TW"], .traditionalChinese), (["zh-TW"], .traditionalChinese),
+		(["zh-HK"], .traditionalChinese), (["zh-MO"], .traditionalChinese),
+		(["ZH_Hant_HK"], .traditionalChinese), (["zh-Hans-TW"], .simplifiedChinese),
+		(["en-US"], .english), (["en-GB", "zh-CN"], .english),
+		(["fr-FR", "zh-HK", "en"], .traditionalChinese), (["ja-JP"], .english), ([], .english)
+	]
+	for (preferences, expected) in cases {
+		precondition(MenuLanguage.system.resolved(preferredLanguages: preferences) == expected)
+	}
+	for language in MenuLanguage.allCases where language != .system {
+		precondition(language.resolved(preferredLanguages: ["fr", "zh-CN"]) == language)
+		for key in MenuText.allCases {
+			let text = key.text(in: language)
+			precondition(!text.isEmpty)
+			precondition(text.components(separatedBy: "%@").count == key.rawValue.components(separatedBy: "%@").count)
+		}
+	}
+	let domain = "com.speek.coding.localization-test.\(UUID().uuidString)"
+	let defaults = UserDefaults(suiteName: domain)!
+	defer { defaults.removePersistentDomain(forName: domain) }
+	precondition(MenuLanguage.selected(in: defaults) == .system)
+	defaults.set(MenuLanguage.traditionalChinese.rawValue, forKey: MenuLanguage.defaultsKey)
+	precondition(MenuLanguage.selected(in: UserDefaults(suiteName: domain)!) == .traditionalChinese)
+	defaults.set("invalid", forKey: MenuLanguage.defaultsKey)
+	precondition(MenuLanguage.selected(in: defaults) == .system)
+	defaults.set(MenuLanguage.system.rawValue, forKey: MenuLanguage.defaultsKey)
+	precondition(MenuLanguage.selected(in: defaults) == .system)
+	print("Menu localization self-test passed (3 languages, system matching, saved preference, and format placeholders).")
+}
+
+if CommandLine.arguments.contains("--localization-self-test") {
+	runMenuLocalizationSelfTest()
+	exit(EXIT_SUCCESS)
 }
 
 private let application = NSApplication.shared

@@ -23,6 +23,7 @@ swiftc scripts/speek-coding-app.swift -O -o "$TMP_DIR/speek-coding-app-validate"
 	-framework ApplicationServices \
 	-framework CoreAudio \
 	-framework CoreGraphics
+"$TMP_DIR/speek-coding-app-validate" --localization-self-test
 node --check cli/index.mjs
 for file in cli/lib/*.mjs; do
 	node --check "$file"
