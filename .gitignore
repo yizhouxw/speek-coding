@@ -1,0 +1,48 @@
+.DS_Store
+
+# Local editor settings
+.idea/
+.vscode/
+
+# Secrets and signing material
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*.cer
+config.env
+ipc-token
+*.bundle
+*.mobileprovision
+*.provisionprofile
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Node
+node_modules/
+
+# Build artifacts
+build/
+dist/
+*.whl
+*.xcarchive
+
+# Local runtime output
+*.log
+recordings/
+*.wav
+*.mp3

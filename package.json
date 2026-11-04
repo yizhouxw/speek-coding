@@ -1,0 +1,57 @@
+{
+  "name": "speek-coding",
+  "version": "0.5.3",
+  "description": "Private, push-to-talk coding dictation for macOS",
+  "type": "module",
+  "license": "MIT",
+  "author": "John Yin",
+  "private": true,
+  "os": [
+    "darwin"
+  ],
+  "keywords": [
+    "dictation",
+    "speech-to-text",
+    "macos",
+    "whisper",
+    "developer-tools"
+  ],
+  "files": [
+    "cli",
+    "docs",
+    "karabiner",
+    "packaging",
+    "scripts/ensure-signing-identity.sh",
+    "scripts/local-asr-server.py",
+    "scripts/speek-coding-app.swift",
+    "scripts/speek-command.sh",
+    "scripts/speek-hud.swift",
+    "CHANGELOG.md",
+    "CODE_OF_CONDUCT.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "bin": {
+    "speek": "./cli/index.mjs",
+    "speek-coding": "./cli/index.mjs"
+  },
+  "engines": {
+    "node": ">=20.12"
+  },
+  "scripts": {
+    "lint": "node --check cli/index.mjs && node --check cli/lib/*.mjs",
+    "test": "node --test test/*.test.mjs && scripts/validate.sh",
+    "smoke": "scripts/smoke-test.sh",
+    "security:audit": "npm audit --omit=dev --registry=https://registry.npmjs.org",
+    "check": "npm test && npm run smoke && npm pack --dry-run --ignore-scripts && npm run security:audit",
+    "package:mac": "scripts/build-package.sh",
+    "package:verify": "scripts/verify-package.sh",
+    "package:smoke": "scripts/package-smoke-test.sh",
+    "prepack": "npm test"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.7.0"
+  }
+}

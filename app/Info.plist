@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleExecutable</key>
+	<string>SpeekCoding</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.speek.coding</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleIconFile</key>
+	<string>SpeekCoding</string>
+	<key>CFBundleName</key>
+	<string>SpeekCoding</string>
+	<key>CFBundleDisplayName</key>
+	<string>SpeekCoding</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>__SPEEK_VERSION__</string>
+	<key>CFBundleVersion</key>
+	<string>__SPEEK_VERSION__</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>13.0</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>LSMultipleInstancesProhibited</key>
+	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.speek.coding.command</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>speekcoding</string>
+			</array>
+		</dict>
+	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>SpeekCoding records audio only while you use push-to-talk dictation.</string>
+</dict>
+</plist>

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability / 私密安全报告
+    url: https://github.com/yizhouxw/speek-coding/security/advisories/new
+    about: Do not disclose vulnerabilities or credentials in public issues. See SECURITY.md if private reporting is unavailable.
+  - name: Documentation and troubleshooting / 文档与故障排查
+    url: https://github.com/yizhouxw/speek-coding/blob/master/SUPPORT.md
+    about: Read the setup and troubleshooting guidance before reporting an issue.

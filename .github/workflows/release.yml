@@ -1,0 +1,114 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - name: Check out release tag
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 22
+          cache: npm
+      - name: Require the current master commit and a matching version
+        env:
+          RELEASE_REF_TYPE: ${{ github.ref_type }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          test "$RELEASE_REF_TYPE" = tag || { echo 'Run this workflow on a version tag.' >&2; exit 1; }
+          node scripts/release-notes.mjs "$RELEASE_TAG" > /dev/null
+          test "$(git cat-file -t "refs/tags/$RELEASE_TAG")" = tag || { echo 'The release tag must be annotated.' >&2; exit 1; }
+          git fetch origin master
+          test "$(git rev-parse HEAD)" = "$(git rev-parse FETCH_HEAD)" || { echo 'The tag must point to the current master commit.' >&2; exit 1; }
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Set up uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm run check
+      - run: uvx pip-audit --no-deps --disable-pip --requirement packaging/requirements-asr.txt
+
+  build:
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    steps:
+      - name: Check out release tag
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Build and verify the development package
+        env:
+          SPEEK_PACKAGE_ARCH: ${{ matrix.arch }}
+        run: |
+          set -euo pipefail
+          npm run package:mac
+          version="$(node -p "require('./package.json').version")"
+          mv "dist/SpeekCoding-${version}-${SPEEK_PACKAGE_ARCH}.pkg" "dist/SpeekCoding-${version}-dev-${SPEEK_PACKAGE_ARCH}.pkg"
+      - name: Upload verified package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: package-${{ matrix.arch }}
+          path: dist/*.pkg
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    needs: [validate, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out release tag
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Download verified packages
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: package-*
+          path: dist
+          merge-multiple: true
+      - name: Publish GitHub pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="${RELEASE_TAG#v}"
+          arm="SpeekCoding-${version}-dev-arm64.pkg"
+          intel="SpeekCoding-${version}-dev-x86_64.pkg"
+          test -f "dist/$arm" && test -f "dist/$intel"
+          (cd dist && sha256sum "$arm" "$intel" > SHA256SUMS.txt)
+          node scripts/release-notes.mjs "$RELEASE_TAG" > release-notes.md
+          printf '\n开发预发布：安装包未签名、未公证，App 使用临时 ad-hoc 签名；仅用于开发验证，不适合作为正式发布，也不能保证升级后权限保持不变。macOS 可能阻止安装或运行。\n\n最低系统版本：macOS 13。模型权重不包含在安装包中。\n' >> release-notes.md
+          gh release create "$RELEASE_TAG" "dist/$arm" "dist/$intel" dist/SHA256SUMS.txt --verify-tag --prerelease --title "SpeekCoding $version (development)" --notes-file release-notes.md

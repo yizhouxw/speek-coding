@@ -1,0 +1,38 @@
+name: Bug report / 缺陷报告
+description: Report a reproducible problem without private data.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        安全漏洞请使用 SECURITY.md 中的私密渠道。
+        请勿上传密钥、token、录音、转写正文或未经脱敏的日志。
+  - type: input
+    id: environment
+    attributes:
+      label: Environment / 运行环境
+      description: SpeekCoding version, install source, macOS version, and Mac architecture.
+    validations:
+      required: true
+  - type: input
+    id: trigger
+    attributes:
+      label: Input and ASR / 输入与转写
+      description: Fn or DJI, Karabiner version, local or remote ASR. Omit private endpoint URLs.
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce / 复现步骤
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior / 预期与实际行为
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Redacted diagnostics / 脱敏诊断
+      description: Optional relevant excerpts only; remove user paths, device identifiers, credentials, and transcript text.
