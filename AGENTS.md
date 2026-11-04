@@ -17,3 +17,4 @@ These instructions apply to the entire repository.
 - Use a public commit identity, preferably the contributor's GitHub noreply email. Do not use an employer email by default.
 - Never publish local credentials, recordings, diagnostic dumps, Git backups, or private recovery branches.
 - Do not mirror refs or automatically share AI notes with the public remote. Private recovery branches must remain on their designated private remote.
+- Set `GIT_AI_SKIP_ALL_HOOKS=1` for automated Git commands so Git AI does not publish authorship notes alongside pushes.
