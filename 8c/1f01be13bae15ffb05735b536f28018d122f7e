@@ -1,0 +1,123 @@
+.github/workflows/release.yml
+  s_4e76f3841c6a61::t_0a902a18966359 80,85-87,114-115,117-118,120-121
+CHANGELOG.md
+  s_4e76f3841c6a61::t_659462b9a54f92 7-11
+docs/RELEASING.md
+  s_4e76f3841c6a61::t_dae37c87bb648a 20-21,33
+licenses/LICENSES.txt
+  s_4e76f3841c6a61::t_72173600283b03 1-23383
+licenses/README.md
+  s_4e76f3841c6a61::t_32e75122a22293 1-16
+licenses/catalog.json
+  s_4e76f3841c6a61::t_bfc313b3768a64 1-133
+licenses/native/AOM-PATENTS.txt
+  s_4e76f3841c6a61::t_930f173240100e 1-108
+licenses/native/AOM.txt
+  s_4e76f3841c6a61::t_fd1a42fbe89ce5 1-27
+licenses/native/FFmpeg-LGPLv3.txt
+  s_4e76f3841c6a61::t_74e5536f60f4de 1-165
+licenses/native/GMP-GPLv2.txt
+  s_4e76f3841c6a61::t_a353cb54c8cbb3 1-339
+licenses/native/GMP-LGPLv3.txt
+  s_4e76f3841c6a61::t_2d46ce40689ada 1-165
+licenses/native/GPLv3.txt
+  s_4e76f3841c6a61::t_e7b8d0a64c83e4 1-674
+licenses/native/LAME-LGPLv2.txt
+  s_4e76f3841c6a61::t_9b6bc9d0e9f28e 1-481
+licenses/native/LLVM-OpenMP.txt
+  s_4e76f3841c6a61::t_984c6b91b99610 1-361
+licenses/native/Ogg.txt
+  s_4e76f3841c6a61::t_3c821046a35628 1-28
+licenses/native/OpenCORE-AMR.txt
+  s_4e76f3841c6a61::t_dad98b50e5503f 1-191
+licenses/native/OpenH264.txt
+  s_4e76f3841c6a61::t_0169683fcf42b7 1-23
+licenses/native/Opus.txt
+  s_4e76f3841c6a61::t_b870be463139e0 1-44
+licenses/native/Ruy.txt
+  s_4e76f3841c6a61::t_c6dc23a8617fb7 1-202
+licenses/native/SRT.txt
+  s_4e76f3841c6a61::t_53939ef4bdbb9b 1-373
+licenses/native/SVT-AV1-BSD2.txt
+  s_4e76f3841c6a61::t_fc1b87c49fd6af 1-27
+licenses/native/SVT-AV1-PATENTS.txt
+  s_4e76f3841c6a61::t_bdc80d60ffa29b 1-107
+licenses/native/SVT-AV1.txt
+  s_4e76f3841c6a61::t_e19d709c09f28d 1-32
+licenses/native/Speex.txt
+  s_4e76f3841c6a61::t_6b7f4959f92b9a 1-35
+licenses/native/TwoLAME-LGPL.txt
+  s_4e76f3841c6a61::t_5771d9f0327250 1-504
+licenses/native/Vorbis.txt
+  s_4e76f3841c6a61::t_5378b43030d5cf 1-28
+licenses/native/cpu_features.txt
+  s_4e76f3841c6a61::t_e5550c21ba25d8 1-230
+licenses/native/cpuinfo.txt
+  s_4e76f3841c6a61::t_9ffd36826c4efb 1-27
+licenses/native/dav1d.txt
+  s_4e76f3841c6a61::t_837ae968d406d8 1-23
+licenses/native/fmt.txt
+  s_4e76f3841c6a61::t_81ec24e217484a 1-20
+licenses/native/intel-openmp-2023.2-0.txt
+  s_4e76f3841c6a61::t_8bd69d67d01db0 1-333
+licenses/native/libvpx-PATENTS.txt
+  s_4e76f3841c6a61::t_2768031b82783e 1-23
+licenses/native/libvpx.txt
+  s_4e76f3841c6a61::t_2344657169a312 1-31
+licenses/native/libwebp-PATENTS.txt
+  s_4e76f3841c6a61::t_13c9b9c727c6d7 1-23
+licenses/native/libwebp.txt
+  s_4e76f3841c6a61::t_d0483ba312059e 1-30
+licenses/native/mkl-include-2023.2-0.txt
+  s_4e76f3841c6a61::t_cd097d0b483d6e 1-25
+licenses/native/oneDNN-3.1.1.txt
+  s_4e76f3841c6a61::t_35703cffe411f5 1-205
+licenses/native/spdlog.txt
+  s_4e76f3841c6a61::t_36dad0653de0df 1-25
+licenses/native/x264-GPLv2.txt
+  s_4e76f3841c6a61::t_080912c7f2cea5 1-340
+licenses/native/x265-GPLv2.txt
+  s_4e76f3841c6a61::t_46d14ab96ef548 1-343
+licenses/upstream/CTranslate2-MIT.txt
+  s_4e76f3841c6a61::t_e03ac1207c962a 1-22
+licenses/upstream/FlatBuffers-Apache-2.0.txt
+  s_4e76f3841c6a61::t_fa357548909531 1-202
+licenses/upstream/Karabiner-Unlicense.txt
+  s_4e76f3841c6a61::t_e35e79ab0d0bce 1-24
+licenses/upstream/Qwen3-ASR-Apache-2.0.txt
+  s_4e76f3841c6a61::t_592ec0e5ea3f29 1-201
+licenses/upstream/Tokenizers-Apache-2.0.txt
+  s_4e76f3841c6a61::t_160d5501ad3c02 1-201
+licenses/upstream/Whisper-MIT.txt
+  s_4e76f3841c6a61::t_0345917313e5ef 1-21
+licenses/upstream/python-build-standalone.txt
+  s_4e76f3841c6a61::t_227b058ea7f973 1-373
+licenses/upstream/whisper.cpp-MIT.txt
+  s_4e76f3841c6a61::t_9d96e9f7c767b0 1-21
+package-lock.json
+  s_4e76f3841c6a61::t_056feee26cd6af 3,9
+package.json
+  s_4e76f3841c6a61::t_107ac1fb51a445 3,24-25
+scripts/generate-license-notices.py
+  s_4e76f3841c6a61::t_9368d5123befb4 1-138
+scripts/speek-coding-app.swift
+  s_4e76f3841c6a61::t_f870ba8d8b6339 258-262,305-309,1998-2062,2069,2175-2177,2182-2202,2463-2501
+scripts/validate.sh
+  s_4e76f3841c6a61::t_bc1ede99a262d1 17,27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "8c1f01be13bae15ffb05735b536f28018d122f7e",
+  "prompts": {},
+  "sessions": {
+    "s_4e76f3841c6a61": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1afe3-7832-7360-9f7c-7427c849ef34",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "yizhouxw <54161870+yizhouxw@users.noreply.github.com>"
+    }
+  }
+}
