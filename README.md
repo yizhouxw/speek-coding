@@ -2,36 +2,42 @@
 
 English · [简体中文](README.zh-CN.md)
 
-SpeekCoding is a local-first dictation tool for macOS. Tap Fn to start live transcription and tap it again to finalize the text. The app copies the result to the clipboard, then optionally pastes it into the application that was active when recording started. It works with coding assistants, terminals, editors, and other text inputs.
+**Speak your next coding task. Put it straight into your editor.**
 
-## Requirements and project status
+SpeekCoding brings local voice input to macOS. Focus a text field in Codex, Claude Code, Cursor, a terminal, or another app. Tap **Fn**, speak, and tap again to finish. SpeekCoding copies the transcript and can paste it into the app where you started recording, with an optional Return to send it.
 
-The menu's **License…** item opens an offline, scrollable document containing the project license, dependency and runtime notices, and model-weight licenses. Text can be selected and copied. Use **OK**, **Close**, Return, Escape, or the window close button to dismiss it.
+[Download for macOS](https://github.com/yizhouxw/speek-coding/releases/latest) · [Quick start](#quick-start) · [Usage guide (中文)](docs/USAGE.zh-CN.md) · [Get help](SUPPORT.md)
 
-- Apple Silicon: macOS 14 or later for Qwen3-ASR / MLX. Intel: macOS 13 or later with faster-whisper. A microphone is required.
-- Karabiner-Elements for global Fn and optional DJI Mic Mini button triggers.
-- Microphone permission for recording; Accessibility and event posting permissions for automatic paste and Return.
+## Why SpeekCoding
 
-This is a `0.x` project. The repository starts from a new source snapshot; earlier development branches, tags, and release downloads have been removed. Public versions restart at `v0.1.0`. Get packages from [Releases](https://github.com/yizhouxw/speek-coding/releases), or follow the [source setup instructions](CONTRIBUTING.md#本地开发). Development packages marked `-dev-` are not Developer ID signed or notarized. A stable distribution must be signed and notarized separately.
+- **See words while you speak.** On Apple Silicon, live transcription updates in the floating HUD and revises the draft with more context. Stopping finalizes the text; transcription is already underway while you talk.
+- **Keep speech on your Mac.** The default engine processes audio locally, with no ASR API key or cloud transcription subscription required. After the model is downloaded, local transcription works offline.
+- **Use your existing tools.** Dictate a prompt, describe a bug, or write a message wherever pasting is supported. Choose automatic paste and Return, paste only, or clipboard only.
+- **A shortcut within reach.** Tap Fn to start and stop, or use an optional DJI Mic Mini button. Fn combinations keep their normal behavior. Global triggers use Karabiner-Elements.
+- **Built for Apple Silicon, with Intel support.** Qwen3-ASR-0.6B uses 4-bit weights and MLX acceleration on Apple Silicon. Intel uses local faster-whisper with transcription after recording stops.
+- **Stay in your flow.** A native menu bar app provides microphone selection, recording feedback, cancellation, and English, Simplified Chinese, and Traditional Chinese menus. Release installers include the runtime, so users do not need Node.js, Python, Homebrew, or Xcode.
 
-## Install and use
+## Quick start
 
-When a package is available, choose the matching architecture from [Releases](https://github.com/yizhouxw/speek-coding/releases), install it, and open SpeekCoding from Applications. The package includes Node.js and the local Python ASR runtime; model weights are downloaded on first use.
+**Requires:** Apple Silicon with macOS 14+, or Intel with macOS 13+, a microphone, and [Karabiner-Elements](https://karabiner-elements.pqrs.org/) for Fn / DJI triggers.
 
-Install and open [Karabiner-Elements](https://karabiner-elements.pqrs.org/), complete its system authorization, then run:
+1. Download the matching `.pkg` from [Releases](https://github.com/yizhouxw/speek-coding/releases/latest): `arm64` for Apple Silicon, `x86_64` for Intel. Install it and open **SpeekCoding** from Applications.
+2. Install and open Karabiner-Elements, then complete its system authorization. SpeekCoding's menu can guide you to its official installer.
+3. Open Terminal and configure the keyboard trigger:
 
-```bash
-speek setup --trigger-mode keyboard
-speek doctor
-```
+   ```bash
+   speek setup --trigger-mode keyboard
+   speek doctor
+   ```
 
-Select a microphone in the menu bar and grant the permissions shown there. Focus a text input, tap Fn, speak, and tap Fn again. Only a standalone Fn tap triggers recording; Fn combinations such as Fn+F12 retain their normal behavior. To add a connected DJI Mic Mini button:
+4. In the menu bar, select your microphone and grant SpeekCoding microphone permission. Automatic paste and Return also require Accessibility and event posting permissions.
+5. Focus a text input. **Tap Fn → speak → tap Fn again.** The first use downloads and loads the model; later sessions reuse cached weights.
 
-```bash
-speek setup --trigger-mode keyboard+dji --input-device "DJI Mic Mini"
-```
+> Current `-dev-` installers are not Developer ID signed or notarized. macOS may block installation or launch; read the release notes before installing. Models are downloaded separately.
 
-By default, SpeekCoding pastes and presses Return. Uncheck **Auto-send (press Return after pasting)** under **Feature Settings** in the menu to paste without Return. Delivery can also be configured from the CLI:
+## Make it fit your workflow
+
+**Review before sending.** Automatic paste and Return is enabled by default. Uncheck **Feature Settings → Auto-send** to paste without sending, or select a delivery mode:
 
 ```bash
 speek config --delivery-mode paste_only
@@ -39,34 +45,21 @@ speek config --delivery-mode clipboard_only
 speek config --delivery-mode paste_and_send
 ```
 
-Settings apply to the next recording. A recording keeps the original target application's process ID; delivery fails if that process exits. It is not redirected to whichever application later has focus.
-
-## Menu language
-
-The menu and its dialogs support English, Simplified Chinese, and Traditional Chinese. By default, **Feature Settings → Language → Follow macOS** uses the first supported language in your macOS preferred language list. Chinese preferences for Taiwan, Hong Kong, and Macao select Traditional Chinese; unsupported languages fall back to English when no supported preference is available.
-
-Choose **简体中文**, **繁體中文**, or **English** in that submenu to override the system language. The choice takes effect without restarting and is remembered after relaunch. Choose **Follow macOS** to restore the default. Menu language is independent of the ASR language; microphone device names come from macOS or the device.
-
-## Common commands
+**Use a wireless button.** Connect the DJI Mic Mini receiver and configure its transmitter button:
 
 ```bash
-speek status
-speek trigger
-speek cancel
-speek config
-speek restart
-speek doctor
-speek update
-speek uninstall
+speek setup --trigger-mode keyboard+dji --input-device "DJI Mic Mini"
 ```
 
-`speek update` refreshes the installed integration from the CLI version being run; it is not an updater that downloads a new release. Cancel from the recording HUD, or press Fn again while transcription or model preparation is in progress. Test recordings made with `speek test-record` are kept at the requested output path.
+**Choose your language and microphone.** Both are available in the menu bar. Menus follow macOS by default; changing the menu language does not change the recognition language.
 
-## Transcription and privacy
+**Cancel whenever needed.** Use Cancel in the recording HUD or `speek cancel`. Pressing Fn while transcription or model preparation is in progress also cancels. During recording, Fn stops and finalizes.
 
-Apple Silicon defaults to local **Qwen3-ASR-0.6B, 4-bit, accelerated by MLX**. Audio is sent to the local service while recording; the HUD shows a draft that can be corrected as you speak. Stopping flushes the remaining audio and finalizes before copying or pasting. Intel defaults to faster-whisper. Whisper, whisper.cpp, and OpenAI-compatible file transcription endpoints remain available.
+## Local transcription
 
-Existing installations keep their configured engine. To switch an Apple Silicon installation after updating the app:
+New Apple Silicon installations default to **Qwen3-ASR-0.6B, 4-bit / MLX**, with live, revisable drafts. Finalization still takes processing time, which varies with the Mac and recording length. Intel defaults to **faster-whisper**. Local Whisper, whisper.cpp, and OpenAI-compatible file transcription services are also configurable.
+
+Existing installations retain their configured engine. To switch to Qwen / MLX on Apple Silicon after updating:
 
 ```bash
 speek config --asr-backend qwen-mlx --asr-model mlx-community/Qwen3-ASR-0.6B-4bit
@@ -74,38 +67,25 @@ speek asr-install
 speek restart
 ```
 
-The model downloads on first use; cached weights are warmed when the service starts. Streaming uses 16 kHz mono audio and one-second decoding updates. If streaming disconnects, the app attempts file transcription using the retained temporary recording. `SPEEK_ASR_STREAMING=0` in the config disables live transcription. See the [configuration guide in Chinese](README.zh-CN.md#转写引擎).
+For engine options, devices, delivery settings, and commands, see the [usage guide (中文)](docs/USAGE.zh-CN.md). `speek status` shows current status; `speek doctor` helps diagnose setup issues. `speek update` refreshes the installed integration from the CLI version being run; download a new installer to upgrade the release.
 
-Default transcription requests stay on the loopback interface. First-use model downloads and optional Karabiner downloads require network access. There is no built-in usage analytics or recording upload service. If you configure a remote ASR endpoint, audio is sent to that provider; HTTPS is required except for loopback addresses.
+## Privacy
 
-Ordinary temporary recordings and transcription state are cleaned up after a session. Explicit test recordings, downloaded model caches, and clipboard contents are retained. Logs and diagnostic reports can contain local paths, device names, and endpoints; redact them before sharing. See [SECURITY.md](SECURITY.md) for details and private vulnerability reporting.
+Default transcription stays on the loopback interface. First-use model downloads and optional Karabiner downloads require a network connection. There is no built-in usage analytics or recording upload service. Choosing a remote ASR endpoint sends audio to that provider.
 
-## Development and support
+Ordinary temporary recordings are cleaned up after a session. Explicit test recordings, cached models, and clipboard contents are retained. See [SECURITY.md](SECURITY.md) for details.
 
-Development requires macOS, Node.js 20.12+, Python 3.12, and Xcode Command Line Tools. Use Python 3.12 as `python3`; Python 3.13+ removed the `cgi` module used by the current local ASR server.
+## Documentation and development
 
-```bash
-git clone https://github.com/yizhouxw/speek-coding.git
-cd speek-coding
-npm ci --ignore-scripts
-npm run check
-```
+- [Usage and configuration (中文)](docs/USAGE.zh-CN.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md) · [Support](SUPPORT.md)
+- [Source installation and contributing](CONTRIBUTING.md)
+- [Architecture](docs/ARCHITECTURE.md) · [Changelog](CHANGELOG.md)
 
-The checks cover the CLI, native app/HUD builds, isolated installation lifecycle, and the standalone NativeInput experiment. NativeInput is not integrated into the app and does not replace Karabiner. Passing its state tests does not establish hardware or permission compatibility.
-
-- [Contribution workflow and source installation](CONTRIBUTING.md)
-- [Help and issue reporting](SUPPORT.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Native input experiment](docs/NATIVE_INPUT_EXPERIMENT.md)
-- [Troubleshooting](docs/TROUBLESHOOTING.md)
-- [Release process](docs/RELEASING.md)
-- [Changelog](CHANGELOG.md)
-- [Code of conduct](CODE_OF_CONDUCT.md)
-
-Maintainers work directly on `master`; external contributions start with an issue and are reviewed as patches or fork commits. The project does not use pull requests.
+Source development requires macOS, Node.js 20.12+, Python 3.12, and Xcode Command Line Tools. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and checks.
 
 ## License and acknowledgments
 
-[MIT](LICENSE). SpeekCoding's project author is [yizhouxw](https://github.com/yizhouxw). The upstream John Yin copyright notice is retained in the license. Third-party runtime notices are in [packaging/THIRD_PARTY_NOTICES.md](packaging/THIRD_PARTY_NOTICES.md). Models and Karabiner-Elements are obtained separately and have their own licenses.
+[MIT](LICENSE). Project author: [yizhouxw](https://github.com/yizhouxw). The hardware-trigger workflow originated from [Johnixr/dji-mic-dictation](https://github.com/Johnixr/dji-mic-dictation); the upstream John Yin copyright notice is retained. [Third-party notices](packaging/THIRD_PARTY_NOTICES.md).
 
-The hardware-trigger workflow originated from [Johnixr/dji-mic-dictation](https://github.com/Johnixr/dji-mic-dictation). SpeekCoding is not affiliated with or endorsed by Apple, DJI, Karabiner-Elements, OpenAI, or model providers.
+SpeekCoding is not affiliated with or endorsed by Apple, DJI, Karabiner-Elements, OpenAI, or model providers.

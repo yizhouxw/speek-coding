@@ -2,129 +2,64 @@
 
 [English](README.md) · 简体中文
 
-> 按一下开始说，再按一下把代码意图送进当前应用。
+**把下一条编程指令说出来，直接送进你的编辑器。**
 
-SpeekCoding 是面向 macOS 的本地优先语音输入工具：按一下开始说话，再按一下停止录音。应用会将语音转成文字，放入剪贴板，并按你的设置粘贴或发送到开始录音时的应用。它适用于 Codex、Claude Code、Cursor、终端，以及其他支持粘贴的输入框。
+SpeekCoding 是 macOS 上的本地语音输入工具。在 Codex、Claude Code、Cursor、终端或其他应用中，点进输入框，**按一下 Fn 开始说话，再按一下结束**。转写文字会复制到剪贴板，并按你的设置粘贴或发送到开始录音时的应用。
 
-- **语音转写**：Apple Silicon 默认使用本机 Qwen3-ASR-0.6B 4-bit / MLX，边说边转写并修正临时结果；也可配置其他兼容服务。
-- **全局触发**：单独按键盘 Fn 键，或另外配置 DJI Mic Mini 发射器的连接键。Fn 组合键保留系统和应用原有行为。全局按键由 Karabiner-Elements 提供。
-- **可选交付方式**：默认自动粘贴并按 Return；也可以只粘贴，或只复制到剪贴板。
-- **菜单栏操作**：选择麦克风、在“功能设置”中切换自动发送、查看和设置权限、检查 Karabiner-Elements，以及退出应用。
-- **录音反馈**：录音和转写期间显示状态提示；首次使用默认模型时会下载模型文件。
-- **许可证**：菜单中的 **License（许可证）…** 打开可滚动、选择复制的离线文本窗口，包含项目、依赖组件、运行时及模型权重的许可证全文。“确认”“关闭”、Return、Esc 或窗口关闭按钮均可关闭。
+[下载 macOS 安装包](https://github.com/yizhouxw/speek-coding/releases/latest) · [快速开始](#快速开始) · [使用指南](docs/USAGE.zh-CN.md) · [帮助与反馈](SUPPORT.md)
 
-> 当前项目处于 `0.x` 阶段。正式发布的安装包应经过 Developer ID 签名和公证；使用远程转写服务时，音频会发送到你配置的服务。
+## 为什么用 SpeekCoding
 
-GitHub 仓库以当前代码快照作为新的历史起点，早期开发分支、标签及预发布包已撤下。首个公开版本从 `v0.1.0` 重新编号；安装包见 [Releases](https://github.com/yizhouxw/speek-coding/releases)，也可使用[源码构建流程](CONTRIBUTING.md#本地开发)。带 `-dev-` 的开发预发布包未经过 Developer ID 签名或公证，请先阅读对应发布说明。
+- **边说边出字，减少说完后的等待。** Apple Silicon 上支持实时转写，悬浮窗持续显示草稿，并随着上下文更新修正。结束录音后定稿，转写过程在说话时就已开始。
+- **语音留在本机。** 默认使用本地模型，无需 ASR API Key 或云端转写订阅；模型下载完成后，本地转写可离线使用。
+- **融入已有工具。** 口述编程需求、描述 Bug、回复消息，在支持粘贴的输入框中使用。可选粘贴并发送、只粘贴或仅复制到剪贴板。
+- **随手触发，保持思路。** 单独轻按 Fn 开始和结束，也可用 DJI Mic Mini 发射器按钮控制；Fn 组合键保留原有行为。全局触发由 Karabiner-Elements 提供。
+- **适配 Apple Silicon，也支持 Intel。** Apple Silicon 使用 Qwen3-ASR-0.6B 的 4-bit 权重与 MLX 加速；Intel 使用本地 faster-whisper，结束录音后转写。
+- **原生菜单栏体验。** 麦克风选择、录音反馈、取消操作，以及简体中文、繁體中文和英语界面。安装包自带运行时，用户无需安装 Node.js、Python、Homebrew 或 Xcode。
 
-## 安装和首次设置
+## 快速开始
 
-Apple Silicon 需要 macOS 14 或更高版本以运行 Qwen / MLX；Intel 使用 faster-whisper，需要 macOS 13 或更高版本。还需要一个可用的麦克风。最终用户无需安装 Node.js、Python、Homebrew 或 Xcode。Fn 和 DJI 按钮触发需要 [Karabiner-Elements](https://karabiner-elements.pqrs.org/)；DJI 按钮还需要连接 DJI Mic Mini 接收器。
+**准备条件：** Apple Silicon 需要 macOS 14+，Intel 需要 macOS 13+；准备一个麦克风，并安装 [Karabiner-Elements](https://karabiner-elements.pqrs.org/) 以使用 Fn / DJI 按钮触发。
 
-1. **下载安装包。** 从项目的 [Releases](https://github.com/yizhouxw/speek-coding/releases) 页面选择与你的 Mac 架构匹配的 `SpeekCoding-<版本>-<架构>.pkg`：Apple Silicon 使用 `arm64`，Intel 使用 `x86_64`。不确定架构时，可在终端运行 `uname -m`。如果尚无适合你电脑的发布包，请参考[源码构建说明](CONTRIBUTING.md)。
-2. **安装并打开应用。** 双击 `.pkg`，按安装器提示完成安装，然后从“应用程序”打开 SpeekCoding。它在菜单栏显示为代码尖括号和声波图标，而不是普通窗口。安装包还会安装 `speek` 命令。
-3. **安装并打开 Karabiner-Elements。** 点击 SpeekCoding 菜单栏中的 Karabiner-Elements 条目；未安装时，可按照提示下载并打开官方安装器。安装完成后打开 Karabiner-Elements，并按其提示完成后台服务、辅助功能、输入监控和驱动扩展等系统授权。不要把这些授权与 SpeekCoding 自身权限混淆。
-4. **完成 SpeekCoding 设置。** 打开“终端”，运行：
-
-   ```bash
-   speek setup
-   ```
-
-   按提示选择键盘或键盘加 DJI 的触发方式、Karabiner 配置和其他选项。已连接 DJI Mic Mini 时也可以明确指定：
+1. **安装应用。** 从 [Releases](https://github.com/yizhouxw/speek-coding/releases/latest) 下载匹配的 `.pkg`：Apple Silicon 选 `arm64`，Intel 选 `x86_64`。安装后，从“应用程序”打开 **SpeekCoding**。
+2. **设置触发工具。** 安装并打开 Karabiner-Elements，按其提示完成系统授权。SpeekCoding 菜单栏提供官方安装器下载引导。
+3. **完成首次设置。** 打开终端，运行：
 
    ```bash
-   speek setup --trigger-mode keyboard+dji --input-device "DJI Mic Mini"
+   speek setup --trigger-mode keyboard
+   speek doctor
    ```
 
-5. **允许 SpeekCoding 使用麦克风和自动粘贴。** 点击菜单栏中的“麦克风”和“自动粘贴和发送”，按 macOS 提示授权。权限状态也可以在 **System Settings → Privacy & Security → Microphone / Accessibility** 中检查。选择仅复制到剪贴板时，不需要自动粘贴所需的控制电脑和模拟按键权限。
-6. **选择麦克风并开始使用。** 在菜单栏选择目标麦克风，打开一个可输入文字的应用，点击输入框，然后按 Fn 或已配置的 DJI 按钮开始说话，再按一次结束。默认模式会粘贴转写文字并按 Return；取消菜单中的“自动发送”即可只粘贴，其他选项见[发送策略](#发送策略)。
+4. **选择麦克风并授权。** 在菜单栏选择麦克风，允许 SpeekCoding 使用麦克风；自动粘贴和发送还需要辅助功能与模拟按键权限。
+5. **开始说话。** 点进目标输入框，**按 Fn → 说话 → 再按 Fn**。首次使用需下载并加载模型，后续复用已缓存的权重。
 
-第一次真实转写可能需要联网下载和加载模型，所需时间取决于网络和机器性能；下载期间可再次按触发键取消。安装包包含应用及本地转写运行时，但不包含模型权重。
+> 当前带 `-dev-` 的安装包未经过 Developer ID 签名或公证，macOS 可能阻止安装或启动，请先阅读对应发布说明。模型权重单独下载。
 
-可以在终端确认安装、权限、设备和本地服务：
+## 按你的习惯使用
+
+**先检查，再发送。** 默认自动粘贴并按 Return。在“功能设置”中取消勾选“自动发送”，即可只粘贴、不发送；也可通过命令选择：
 
 ```bash
-speek status
-speek doctor
+speek config --delivery-mode paste_only      # 只粘贴
+speek config --delivery-mode clipboard_only  # 只复制
+speek config --delivery-mode paste_and_send  # 粘贴并发送（默认）
 ```
 
-如果要验证麦克风，运行 `speek test-record --duration 2 --wav /tmp/speek-test.wav`；该命令会保留指定路径的测试录音。
-
-## 菜单栏
-
-点击菜单栏中的 SpeekCoding 图标打开菜单：
-
-![SpeekCoding 菜单栏：麦克风、权限、Karabiner 和退出选项](docs/images/menu-bar.png)
-
-| 菜单项 | 功能 |
-| --- | --- |
-| **麦克风输入** | 选择系统默认麦克风或已连接设备。勾选表示当前选择；设备断开时会标记为未连接。新选择从下一次录音生效。 |
-| **自动发送（粘贴时附加回车）** | 位于“功能设置”下，默认勾选，粘贴后按 Return；取消勾选后只粘贴。通过命令行设置为仅复制到剪贴板时显示横线，点击可启用自动发送。设置从下一次录音生效。 |
-| **语言** | 位于“功能设置”下，支持“跟随 macOS”、简体中文、繁體中文和 English。切换无需重启，选择会在重新启动后保留。 |
-| **麦克风** | 显示 SpeekCoding 的麦克风权限；首次点击可请求授权，已拒绝时打开系统设置。 |
-| **自动粘贴和发送** | 显示控制电脑和模拟按键的权限状态；点击后打开相关系统设置。文字会先复制到剪贴板，再依照发送策略粘贴或按 Return。 |
-| **Karabiner-Elements** | 显示安装状态；已安装时打开 Karabiner 设置，未安装时提供官方下载与安装引导。安装后仍需在 Karabiner 中完成系统授权并运行 `speek setup`。 |
-| **退出 SpeekCoding** | 退出菜单栏应用并停止由应用管理的本地转写服务。重新打开应用时会启动已安装的本地服务。 |
-
-截图中的设备名称仅为示例；实际菜单会根据连接设备和权限状态变化。更改权限后重新打开菜单即可刷新状态。若应用没有出现在菜单栏，请先从“应用程序”打开 SpeekCoding。
-
-菜单及其相关对话框默认跟随 macOS 首选语言顺序，选择支持的简体中文、繁体中文或英语。台湾、香港、澳门地区的中文偏好使用繁体；没有支持的首选语言时回退到英语。在“功能设置 → 语言”中可手动切换，也可选回“跟随 macOS”。界面语言不改变语音识别语言，麦克风名称由系统或设备提供。
-
-## 日常使用
-
-录音或转写期间可点击悬浮窗中的 Cancel 取消；录音超过 5 分钟会自动取消。
+**用无线按钮控制。** 连接 DJI Mic Mini 接收器后，配置发射器按钮：
 
 ```bash
-speek status                 # 查看产品状态和下一步动作
-speek permissions            # 由 App 发起并检查 macOS 权限请求
-speek trigger                # 通过鉴权 Unix socket 切换录音状态
-speek cancel                 # 取消当前录音或转写
-speek config                 # 交互修改输入、发送策略、提示音和 HUD
-speek restart                # 修改 ASR 配置后重载后台服务
-speek logs                   # 最近 80 行 ASR 日志
-speek logs --follow          # 持续查看 ASR 日志
-speek doctor                 # 完整诊断 App、签名、IPC、权限和服务
-speek update                 # 安装新 .pkg 后刷新 IPC 客户端和 Karabiner 规则
-```
-
-本地 ASR 服务优先安装到 `~/Library/LaunchAgents/com.speek.coding.asr.plist`。如果当前宿主被 macOS 禁止写入登录项，会回退到 `~/.config/speek-coding/com.speek.coding.asr.plist` 并在当前登录会话运行。日志位于 `~/.config/speek-coding/logs/`；`speek stop` 和 `speek start` 可以暂停或恢复本地 ASR。
-
-SpeekCoding App 启动时会启动已安装的本地 ASR 服务，退出时会停止该服务。使用远程 ASR 或模拟转写时，App 启动不会启动本地服务。
-
-## 输入设备与触发方式
-
-SpeekCoding 始终支持键盘工作流，也可以把 DJI Mic Mini 作为额外触发器：
-
-只有单独按下并释放 Fn 才触发；Fn+F12 等组合键不触发录音。系统设置、键盘型号或其他 Karabiner 规则可能影响事件，排查方式见[故障排查](docs/TROUBLESHOOTING.md)。
-
-```bash
-speek setup --trigger-mode keyboard
 speek setup --trigger-mode keyboard+dji --input-device "DJI Mic Mini"
 ```
 
-DJI 接收器通过 USB-C 连接 Mac 后，发射器连接键通常会暴露为以下 Consumer HID 事件：
+**切换麦克风和界面语言。** 直接在菜单栏选择；界面默认跟随 macOS，也可在“功能设置 → 语言”中手动切换。界面语言不影响语音识别语言。
 
-```text
-vendor_id = 11427
-product_id = 16401
-consumer_key_code = volume_increment
-```
+**随时取消。** 点击录音悬浮窗中的 Cancel，或运行 `speek cancel`。转写或模型准备期间再次按 Fn 也可取消；录音期间按 Fn 则表示停止并定稿。
 
-如果使用其他麦克风，只需传入 CoreAudio 设备名的一部分：
+## 本地转写
 
-```bash
-speek config --input-device "MacBook Pro Microphone"
-```
+Apple Silicon 新安装默认采用 **Qwen3-ASR-0.6B 4-bit / MLX**，支持实时草稿和识别修正。停止后的定稿仍需计算，耗时取决于机器和录音长度。Intel 默认采用 **faster-whisper**。也可配置本地 Whisper、whisper.cpp 或兼容 OpenAI 文件转写接口的服务。
 
-## 转写引擎
-
-### Apple Silicon 默认：Qwen3-ASR-0.6B / MLX
-
-默认使用开源的 `mlx-community/Qwen3-ASR-0.6B-4bit`，通过 MLX 利用 Apple GPU。模型版本固定为 `313d850181767edf09f00a9c289becca70e58cd0`，首次使用时下载权重，已缓存模型在后台服务启动时预热；安装包内置 Python 和模型运行依赖，不会在用户机执行 `pip install`。
-
-按 Fn 开始后，App 持续向本机服务发送 16 kHz 单声道 PCM16 音频；模型每秒更新一次草稿，悬浮窗显示最新文字。草稿可以结合上下文纠错。再次按 Fn 时发送剩余音频、取得最终结果，再复制、粘贴或发送。流式连接失败时，会使用本次录音尝试文件转写；取消时清理会话及临时录音。音频不会发送到云端。
-
-已有安装会保留原引擎。更新应用后切换：
+已有安装会保留原转写引擎。在 Apple Silicon 上更新应用后，可这样切换到 Qwen / MLX：
 
 ```bash
 speek config --asr-backend qwen-mlx --asr-model mlx-community/Qwen3-ASR-0.6B-4bit
@@ -132,109 +67,25 @@ speek asr-install
 speek restart
 ```
 
-源码安装时 `asr-install` 会在产品私有 Python 环境安装 MLX 依赖。修改配置文件中的 `SPEEK_ASR_STREAMING=0` 可关闭实时转写，使用同一 Qwen 模型进行文件转写。Qwen 输入固定为 16 kHz；保留默认 `SPEEK_AUDIO_SAMPLE_RATE=16000`。
+引擎选项、设备设置、发送策略及完整命令见[使用指南](docs/USAGE.zh-CN.md)。查看状态用 `speek status`，排查安装问题用 `speek doctor`。`speek update` 刷新当前 CLI 版本对应的本机集成；升级发布版本需下载新的安装包。
 
-首次下载和加载期间会显示准备状态。转写等待期间再次按 Fn 可以取消；录音期间按 Fn 表示停止并定稿，悬浮窗 Cancel 按钮随时取消本次录音。
+## 隐私
 
-### Intel 默认 / 可选：faster-whisper
+默认转写请求仅访问本机服务；首次下载模型、下载安装 Karabiner 需要联网。没有内置使用行为分析或录音上传服务。主动配置远程 ASR 后，音频会发送到你指定的服务。
 
-Intel 默认使用 `whisper-large-v3-turbo`。Apple Silicon 也可显式选择 Whisper，例如：
+普通会话结束后清理临时录音；明确保存的测试录音、模型缓存和剪贴板内容会保留。更多说明见[安全策略](SECURITY.md)。
 
-```bash
-speek config --asr-backend faster-whisper --asr-model small
-speek asr-install
-speek restart
-```
+## 文档与开发
 
-Whisper 和外部文件接口继续采用停止录音后转写的流程。
+- [使用与配置指南](docs/USAGE.zh-CN.md)
+- [故障排查](docs/TROUBLESHOOTING.md) · [帮助与反馈](SUPPORT.md)
+- [源码安装与参与开发](CONTRIBUTING.md)
+- [架构与数据流](docs/ARCHITECTURE.md) · [版本记录](CHANGELOG.md)
 
-### Apple Silicon：whisper.cpp
+源码开发需要 macOS、Node.js 20.12+、Python 3.12 和 Xcode Command Line Tools，设置及检查步骤见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-准备好 `whisper-cli` 和 `ggml-*.bin` 后：
+## 开源与致谢
 
-```bash
-speek config \
-  --asr-backend whisper-cpp \
-  --asr-model "$HOME/.cache/speek-coding/models/whisper.cpp/ggml-large-v3-turbo.bin" \
-  --whisper-cpp-bin "$HOME/.cache/speek-coding/src/whisper.cpp/build/bin/whisper-cli" \
-  --asr-best-of 1
-speek restart
-```
+[MIT](LICENSE)。项目作者为 [yizhouxw](https://github.com/yizhouxw)。硬件触发工作流源自 [Johnixr/dji-mic-dictation](https://github.com/Johnixr/dji-mic-dictation)，保留上游 John Yin 的版权声明。另见[第三方声明](packaging/THIRD_PARTY_NOTICES.md)。
 
-中英混合口述建议使用自动语言识别；`auto` 会规范化为空语言提示，本地 whisper.cpp 会显式使用 `-l auto`，外部兼容 API 则不会收到固定的语言代码：
-
-```bash
-speek config --asr-language auto \
-  --asr-prompt "中英混合软件工程口述 / Mixed Chinese-English software engineering dictation. 保持原始中英文切换，保留 code identifiers、commands、filenames 和 product names，不要互相翻译中英文。"
-speek restart
-```
-
-### 外部 OpenAI-compatible ASR
-
-SpeekCoding 也可以连接已有的转写服务。远程服务必须使用 HTTPS；明文 HTTP 只允许 `localhost` / loopback 地址：
-
-```bash
-speek setup --skip-asr \
-  --asr-url http://127.0.0.1:9000/v1/audio/transcriptions \
-  --asr-model your-model
-```
-
-接口约定：`POST /v1/audio/transcriptions`，multipart 字段包含 `model` 和 `file`，响应为 `{"text":"..."}` 或纯文本。HTTP 请求由 `SpeekCoding.app` 发起；本地 ASR LaunchAgent 接收 PCM 音频流或 WAV 并返回文本。
-
-## 发送策略
-
-```bash
-speek config --delivery-mode paste_and_send  # 粘贴并发送 Return（默认）
-speek config --delivery-mode paste_only      # 只粘贴
-speek config --delivery-mode clipboard_only  # 只写入剪贴板
-```
-
-开始录音时，App 会锁定当时的前台应用 PID。转写完成后，粘贴和 Return 的 CGEvent 会定向发送给该进程；`clipboard_only` 不发送 CGEvent。
-
-需要先验证硬件与权限而不运行真实 ASR 时：
-
-```bash
-speek config --fake-transcript "请继续"
-# 验证完恢复
-speek config --fake-transcript ""
-```
-
-## 隐私边界
-
-默认转写请求只访问本机 `http://127.0.0.1:8000`；首次准备模型需要访问模型下载服务，点击下载安装 Karabiner 时也会访问其下载地址。项目没有内置使用行为分析或录音上传服务。内置 ASR 服务只允许绑定 loopback，限制单次请求大小，并锁定启动时配置的模型。录音临时文件和运行状态写在每用户目录 `/tmp/speek-coding-<uid>/`，常规会话结束后即清理；只有明确运行 `speek test-record` 才保留测试 WAV。模型缓存和剪贴板内容不会随会话自动清空。若把 `--asr-url` 指向远端服务，App 会把音频发送到该地址，数据策略由对应服务负责。
-
-## 卸载
-
-```bash
-speek uninstall
-```
-
-`speek uninstall` 会停止 ASR 服务并移除当前用户的 LaunchAgent、鉴权 token、Karabiner 托管规则和客户端、HUD、配置及日志，但不会删除由系统安装器管理的 `/Applications/SpeekCoding.app` 和 `/usr/local/bin` 命令。完整移除发布包可再执行 `sudo rm -rf /Applications/SpeekCoding.app /usr/local/bin/speek /usr/local/bin/speek-coding`。模型缓存默认保留，便于以后重新安装。
-
-## 文档
-
-- [功能规格](docs/FEATURE_SPEC.md)
-- [产品边界与用户旅程](docs/PRODUCT.md)
-- [开发说明](docs/DEVELOPMENT.md)
-- [原生输入实验（未接入产品）](docs/NATIVE_INPUT_EXPERIMENT.md)
-- [架构与数据流](docs/ARCHITECTURE.md)
-- [故障排查](docs/TROUBLESHOOTING.md)
-- [参与开发](CONTRIBUTING.md)
-- [安全策略](SECURITY.md)
-- [发布流程](docs/RELEASING.md)
-- [行为准则](CODE_OF_CONDUCT.md)
-- [版本记录](CHANGELOG.md)
-- [获取帮助与反馈](SUPPORT.md)
-- [开源维护检查](docs/OPEN_SOURCE.md)
-
-## 致谢
-
-硬件触发工作流源自 [Johnixr/dji-mic-dictation](https://github.com/Johnixr/dji-mic-dictation)，SpeekCoding 将 SaaS 转写替换为本地优先 ASR，并补齐原生 App、稳定产品身份、后台服务、状态诊断和生命周期管理。
-
-SpeekCoding 与 Apple、DJI、Karabiner-Elements、OpenAI 及模型提供方均无隶属或背书关系；相关名称和商标归各自权利人所有。
-
-## License
-
-[MIT](LICENSE)
-
-SpeekCoding 的项目作者为 [yizhouxw](https://github.com/yizhouxw)。许可证同时保留上游 John Yin 的版权声明，详见[第三方声明](packaging/THIRD_PARTY_NOTICES.md)。
+SpeekCoding 与 Apple、DJI、Karabiner-Elements、OpenAI 及模型提供方均无隶属或背书关系。
