@@ -1,0 +1,23 @@
+README.md
+  s_4e76f3841c6a61::t_c4e92d397c47b8 5,7,9,11,13-18,20,22,24-26,28-31,33-34,36,38-40,48,51,54-56,58,60,62,70,72,74,76,78,80-83,85,89,91
+README.zh-CN.md
+  s_4e76f3841c6a61::t_9d30466ce2415a 5,7,9,11,13-18,20,22,24-26,29-30,33-34,36,38,40,43-45,48,54,56,58,60,62,70,72,74,76,78,80-83,85,87,89,91
+docs/USAGE.zh-CN.md
+  s_4e76f3841c6a61::t_77a80b1b5c797d 1-167
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "369fbbf2f2d3e433ff22d44d595b040d3801f8c7",
+  "prompts": {},
+  "sessions": {
+    "s_4e76f3841c6a61": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1afe3-7832-7360-9f7c-7427c849ef34",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "yizhouxw <54161870+yizhouxw@users.noreply.github.com>"
+    }
+  }
+}
