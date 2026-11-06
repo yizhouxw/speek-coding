@@ -187,6 +187,9 @@ PATH=/usr/bin:/bin "$BUNDLED_PYTHON" -m pip install \
 	cd "$RESOURCES"
 	/usr/bin/env npm ci --omit=dev --ignore-scripts --no-audit --no-fund
 )
+"$BUNDLED_PYTHON" -B scripts/generate-license-notices.py \
+	--project-root "$REPO_ROOT" --resources "$RESOURCES" \
+	--output "$RESOURCES/OPEN_SOURCE_LICENSES.txt"
 
 /bin/cp scripts/speek-package-launcher.sh "$ROOT_DIR/usr/local/bin/speek"
 /bin/cp scripts/speek-package-launcher.sh "$ROOT_DIR/usr/local/bin/speek-coding"

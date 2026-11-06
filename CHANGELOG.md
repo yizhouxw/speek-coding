@@ -4,6 +4,11 @@ Public releases follow [Semantic Versioning](https://semver.org/). Version numbe
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-06
+
+- Add a localized License menu and a resizable, selectable, scrollable license window with OK, Close, Return, Escape, and window-close controls.
+- Bundle the project license, upstream model-weight licenses, and full open-source dependency and runtime notices; collect actual package dependencies before signing and attach architecture-specific license documents to the GitHub release.
+
 - Default Apple Silicon installations to local Qwen3-ASR-0.6B 4-bit / MLX, with live, revisable HUD transcription and final text delivery after stopping. Apple Silicon packages now require macOS 14; Intel keeps Whisper and macOS 13 support.
 - Add ordered, bounded local PCM sessions, cancellation and file-transcription recovery, and bundle pinned MLX dependencies. Existing installations retain their engine until explicitly switched.
 

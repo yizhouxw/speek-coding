@@ -25,12 +25,16 @@ LAUNCHER="$PAYLOAD_ROOT/usr/local/bin/speek"
 NODE_LICENSE="$RESOURCES/licenses/Node.js-LICENSE"
 THIRD_PARTY_NOTICES="$RESOURCES/THIRD_PARTY_NOTICES.md"
 
-for path in "$APP" "$RESOURCES/SpeekCoding.icns" "$NODE" "$PYTHON" "$HUD" "$CLI" "$LAUNCHER" "$NODE_LICENSE" "$THIRD_PARTY_NOTICES"; do
+for path in "$APP" "$RESOURCES/SpeekCoding.icns" "$NODE" "$PYTHON" "$HUD" "$CLI" "$LAUNCHER" "$NODE_LICENSE" "$THIRD_PARTY_NOTICES" "$RESOURCES/OPEN_SOURCE_LICENSES.txt"; do
 	[ -e "$path" ] || {
 		printf 'missing package payload: %s\n' "$path" >&2
 		exit 1
 	}
 done
+/usr/bin/grep -q 'PROJECT LICENSE / 项目许可证' "$RESOURCES/OPEN_SOURCE_LICENSES.txt"
+/usr/bin/grep -q 'Qwen3-ASR-0.6B-4bit' "$RESOURCES/OPEN_SOURCE_LICENSES.txt"
+/usr/bin/grep -q 'NPM COMPONENT' "$RESOURCES/OPEN_SOURCE_LICENSES.txt"
+/usr/bin/grep -q 'PYTHON COMPONENT' "$RESOURCES/OPEN_SOURCE_LICENSES.txt"
 
 /usr/bin/grep -q 'relocatable="false"' "$PACKAGE_INFO"
 

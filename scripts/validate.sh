@@ -14,7 +14,7 @@ bash -n scripts/verify-package.sh
 bash -n scripts/package-smoke-test.sh
 bash -n scripts/speek-package-launcher.sh
 /usr/bin/plutil -lint app/Info.plist app/SpeekCoding.entitlements packaging/components.plist >/dev/null
-PYTHONPYCACHEPREFIX="$TMP_DIR/pycache" python3 -m py_compile scripts/local-asr-server.py
+PYTHONPYCACHEPREFIX="$TMP_DIR/pycache" python3 -m py_compile scripts/local-asr-server.py scripts/generate-license-notices.py
 swiftc scripts/speek-hud.swift -O -o "$TMP_DIR/speek-hud-validate"
 "$TMP_DIR/speek-hud-validate" --layout-self-test
 swiftc scripts/speek-coding-app.swift -O -o "$TMP_DIR/speek-coding-app-validate" \
@@ -24,6 +24,7 @@ swiftc scripts/speek-coding-app.swift -O -o "$TMP_DIR/speek-coding-app-validate"
 	-framework CoreAudio \
 	-framework CoreGraphics
 "$TMP_DIR/speek-coding-app-validate" --localization-self-test
+"$TMP_DIR/speek-coding-app-validate" --license-self-test licenses/LICENSES.txt
 python3 -B test/qwen-streaming.py --native-client "$TMP_DIR/speek-coding-app-validate"
 node --check cli/index.mjs
 for file in cli/lib/*.mjs; do

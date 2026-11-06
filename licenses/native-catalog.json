@@ -1,0 +1,252 @@
+[
+  {
+    "name": "FFmpeg",
+    "patterns": [
+      "libav*",
+      "libsw*"
+    ],
+    "source": "https://github.com/FFmpeg/FFmpeg/tree/n7.1.1",
+    "files": [
+      "native/FFmpeg-LGPLv3.txt",
+      "native/GPLv3.txt"
+    ],
+    "license_sources": [
+      "https://raw.githubusercontent.com/FFmpeg/FFmpeg/n7.1.1/COPYING.LGPLv3",
+      "https://raw.githubusercontent.com/FFmpeg/FFmpeg/n7.1.1/COPYING.GPLv3"
+    ]
+  },
+  {
+    "name": "x264",
+    "patterns": [
+      "libx264*"
+    ],
+    "source": "https://code.videolan.org/videolan/x264",
+    "files": [
+      "native/x264-GPLv2.txt"
+    ],
+    "license_sources": [
+      "https://raw.githubusercontent.com/mirror/x264/master/COPYING"
+    ]
+  },
+  {
+    "name": "x265",
+    "patterns": [
+      "libx265*"
+    ],
+    "source": "https://bitbucket.org/multicoreware/x265_git/",
+    "files": [
+      "native/x265-GPLv2.txt"
+    ],
+    "license_sources": [
+      "https://raw.githubusercontent.com/videolan/x265/master/COPYING"
+    ]
+  },
+  {
+    "name": "LAME",
+    "patterns": [
+      "libmp3lame*"
+    ],
+    "source": "https://lame.sourceforge.io/",
+    "files": [
+      "native/LAME-LGPLv2.txt"
+    ],
+    "license_sources": [
+      "https://raw.githubusercontent.com/lameproject/lame/master/COPYING"
+    ]
+  },
+  {
+    "name": "TwoLAME",
+    "patterns": [
+      "libtwolame*"
+    ],
+    "source": "https://www.twolame.org/",
+    "files": [
+      "native/TwoLAME-LGPL.txt"
+    ],
+    "license_sources": [
+      "https://raw.githubusercontent.com/njh/twolame/main/COPYING"
+    ]
+  },
+  {
+    "name": "GMP",
+    "patterns": [
+      "libgmp*"
+    ],
+    "source": "https://gmplib.org/",
+    "files": [
+      "native/GMP-LGPLv3.txt",
+      "native/GMP-GPLv2.txt"
+    ],
+    "license_sources": [
+      "https://raw.githubusercontent.com/gmp-mirror/gmp/master/COPYING.LESSERv3",
+      "https://raw.githubusercontent.com/gmp-mirror/gmp/master/COPYINGv2"
+    ]
+  },
+  {
+    "name": "OpenCORE AMR",
+    "patterns": [
+      "libopencore-amr*"
+    ],
+    "source": "https://sourceforge.net/projects/opencore-amr/",
+    "files": [
+      "native/OpenCORE-AMR.txt"
+    ],
+    "license_sources": [
+      "https://raw.githubusercontent.com/BelledonneCommunications/opencore-amr/master/LICENSE"
+    ]
+  },
+  {
+    "name": "OpenH264",
+    "patterns": [
+      "libopenh264*"
+    ],
+    "source": "https://github.com/cisco/openh264",
+    "files": [
+      "native/OpenH264.txt"
+    ],
+    "license_sources": [
+      "https://raw.githubusercontent.com/cisco/openh264/master/LICENSE"
+    ]
+  },
+  {
+    "name": "AOM",
+    "patterns": [
+      "libaom*"
+    ],
+    "source": "https://aomedia.googlesource.com/aom/",
+    "files": [
+      "native/AOM.txt",
+      "native/AOM-PATENTS.txt"
+    ],
+    "license_sources": [
+      "https://raw.githubusercontent.com/mozilla/aom/master/LICENSE",
+      "https://raw.githubusercontent.com/mozilla/aom/master/PATENTS"
+    ]
+  },
+  {
+    "name": "dav1d",
+    "patterns": [
+      "libdav1d*"
+    ],
+    "source": "https://code.videolan.org/videolan/dav1d",
+    "files": [
+      "native/dav1d.txt"
+    ],
+    "license_sources": [
+      "https://raw.githubusercontent.com/videolan/dav1d/master/COPYING"
+    ]
+  },
+  {
+    "name": "libvpx",
+    "patterns": [
+      "libvpx*"
+    ],
+    "source": "https://github.com/webmproject/libvpx",
+    "files": [
+      "native/libvpx.txt",
+      "native/libvpx-PATENTS.txt"
+    ],
+    "license_sources": [
+      "https://raw.githubusercontent.com/webmproject/libvpx/main/LICENSE",
+      "https://raw.githubusercontent.com/webmproject/libvpx/main/PATENTS"
+    ]
+  },
+  {
+    "name": "libwebp",
+    "patterns": [
+      "libwebp*",
+      "libsharpyuv*"
+    ],
+    "source": "https://chromium.googlesource.com/webm/libwebp/",
+    "files": [
+      "native/libwebp.txt",
+      "native/libwebp-PATENTS.txt"
+    ],
+    "license_sources": [
+      "https://raw.githubusercontent.com/webmproject/libwebp/main/COPYING",
+      "https://raw.githubusercontent.com/webmproject/libwebp/main/PATENTS"
+    ]
+  },
+  {
+    "name": "Ogg",
+    "patterns": [
+      "libogg*"
+    ],
+    "source": "https://github.com/xiph/ogg",
+    "files": [
+      "native/Ogg.txt"
+    ],
+    "license_sources": [
+      "https://raw.githubusercontent.com/xiph/ogg/master/COPYING"
+    ]
+  },
+  {
+    "name": "Vorbis",
+    "patterns": [
+      "libvorbis*"
+    ],
+    "source": "https://github.com/xiph/vorbis",
+    "files": [
+      "native/Vorbis.txt"
+    ],
+    "license_sources": [
+      "https://raw.githubusercontent.com/xiph/vorbis/master/COPYING"
+    ]
+  },
+  {
+    "name": "Speex",
+    "patterns": [
+      "libspeex*"
+    ],
+    "source": "https://github.com/xiph/speex",
+    "files": [
+      "native/Speex.txt"
+    ],
+    "license_sources": [
+      "https://raw.githubusercontent.com/xiph/speex/master/COPYING"
+    ]
+  },
+  {
+    "name": "Opus",
+    "patterns": [
+      "libopus*"
+    ],
+    "source": "https://github.com/xiph/opus",
+    "files": [
+      "native/Opus.txt"
+    ],
+    "license_sources": [
+      "https://raw.githubusercontent.com/xiph/opus/main/COPYING"
+    ]
+  },
+  {
+    "name": "SRT",
+    "patterns": [
+      "libsrt*"
+    ],
+    "source": "https://github.com/Haivision/srt",
+    "files": [
+      "native/SRT.txt"
+    ],
+    "license_sources": [
+      "https://raw.githubusercontent.com/Haivision/srt/v1.5.4/LICENSE"
+    ]
+  },
+  {
+    "name": "SVT-AV1",
+    "patterns": [
+      "libSvtAv1Enc*"
+    ],
+    "source": "https://gitlab.com/AOMediaCodec/SVT-AV1",
+    "files": [
+      "native/SVT-AV1.txt",
+      "native/SVT-AV1-BSD2.txt",
+      "native/SVT-AV1-PATENTS.txt"
+    ],
+    "license_sources": [
+      "https://gitlab.com/AOMediaCodec/SVT-AV1/-/raw/v3.0.0/LICENSE.md",
+      "https://gitlab.com/AOMediaCodec/SVT-AV1/-/raw/v3.0.0/LICENSE-BSD2.md",
+      "https://gitlab.com/AOMediaCodec/SVT-AV1/-/raw/v3.0.0/PATENTS.md"
+    ]
+  }
+]

@@ -255,6 +255,11 @@ private enum MenuText: String, CaseIterable {
 	case karabinerMissing = "Karabiner-Elements: Not Installed (Download)…"
 	case karabinerHelp = "Global shortcuts and the DJI Mic button require Karabiner-Elements"
 	case quit = "Quit SpeekCoding"
+	case license = "License…"
+	case licenseTitle = "Licenses and Open-source Notices"
+	case licenseConfirm = "OK"
+	case close = "Close"
+	case licenseUnavailable = "License text could not be loaded. Reinstall SpeekCoding to restore it."
 	case karabinerOpenFailed = "Could not open Karabiner-Elements."
 	case karabinerInstall = "Install Karabiner-Elements"
 	case karabinerGuide = "SpeekCoding uses Karabiner-Elements for global shortcuts and the DJI Mic button. The installer will be downloaded from the official website and opened. After installation, open Karabiner-Elements, allow background services, Accessibility, and Input Monitoring as prompted, then run SpeekCoding setup again."
@@ -297,6 +302,11 @@ private enum MenuText: String, CaseIterable {
 		case .karabinerMissing: return ("Karabiner-Elements：未安装（下载安装）…", "Karabiner-Elements：未安裝（下載安裝）…")
 		case .karabinerHelp: return ("全局按键和 DJI Mic 按钮需要 Karabiner-Elements", "全域快捷鍵與 DJI Mic 按鈕需要 Karabiner-Elements")
 		case .quit: return ("退出 SpeekCoding", "結束 SpeekCoding")
+		case .license: return ("License（许可证）…", "License（授權條款）…")
+		case .licenseTitle: return ("许可证与开源声明", "授權條款與開源聲明")
+		case .licenseConfirm: return ("确认", "確認")
+		case .close: return ("关闭", "關閉")
+		case .licenseUnavailable: return ("无法读取许可证文本，请重新安装 SpeekCoding 以恢复。", "無法讀取授權條款文字，請重新安裝 SpeekCoding 以還原。")
 		case .karabinerOpenFailed: return ("无法打开 Karabiner-Elements。", "無法開啟 Karabiner-Elements。")
 		case .karabinerInstall: return ("安装 Karabiner-Elements", "安裝 Karabiner-Elements")
 		case .karabinerGuide: return ("SpeekCoding 使用 Karabiner-Elements 接收全局按键和 DJI Mic 按钮。将从官方网站下载并打开安装器。安装后请打开 Karabiner-Elements，按提示允许后台服务、辅助功能和输入监控，再重新运行 SpeekCoding 设置。", "SpeekCoding 使用 Karabiner-Elements 接收全域快捷鍵與 DJI Mic 按鈕。將從官方網站下載並開啟安裝程式。安裝後請開啟 Karabiner-Elements，依提示允許背景服務、輔助使用與輸入監控，再重新執行 SpeekCoding 設定。")
@@ -1985,12 +1995,78 @@ private func statusBarIcon() -> NSImage {
 	return icon
 }
 
+private final class LicenseWindowController: NSWindowController {
+	let textView = NSTextView()
+	let confirmButton = NSButton(title: menuText(.licenseConfirm), target: nil, action: nil)
+	let closeButton = NSButton(title: menuText(.close), target: nil, action: nil)
+
+	init(text: String) {
+		let panel = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 780, height: 580),
+			styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
+		super.init(window: panel)
+		panel.title = menuText(.licenseTitle)
+		panel.minSize = NSSize(width: 540, height: 360)
+		panel.isReleasedWhenClosed = false
+		panel.isRestorable = false
+		panel.center()
+		guard let content = panel.contentView else { return }
+		let scroll = NSScrollView()
+		scroll.translatesAutoresizingMaskIntoConstraints = false
+		scroll.hasVerticalScroller = true
+		scroll.autohidesScrollers = true
+		scroll.borderType = .bezelBorder
+		textView.isEditable = false
+		textView.isSelectable = true
+		textView.isRichText = false
+		textView.usesFindBar = true
+		textView.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+		textView.textContainerInset = NSSize(width: 14, height: 14)
+		textView.isVerticallyResizable = true
+		textView.isHorizontallyResizable = false
+		textView.autoresizingMask = [.width]
+		textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+		textView.textContainer?.widthTracksTextView = true
+		textView.layoutManager?.allowsNonContiguousLayout = true
+		textView.string = text
+		scroll.documentView = textView
+		content.addSubview(scroll)
+		for button in [closeButton, confirmButton] {
+			button.translatesAutoresizingMaskIntoConstraints = false
+			button.bezelStyle = .rounded
+			button.target = self
+			button.action = #selector(dismissLicense)
+			content.addSubview(button)
+		}
+		confirmButton.keyEquivalent = "\r"
+		closeButton.keyEquivalent = "\u{1b}"
+		NSLayoutConstraint.activate([
+			scroll.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 20),
+			scroll.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -20),
+			scroll.topAnchor.constraint(equalTo: content.topAnchor, constant: 20),
+			scroll.bottomAnchor.constraint(equalTo: confirmButton.topAnchor, constant: -16),
+			confirmButton.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -20),
+			confirmButton.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -16),
+			confirmButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 90),
+			closeButton.trailingAnchor.constraint(equalTo: confirmButton.leadingAnchor, constant: -12),
+			closeButton.centerYAnchor.constraint(equalTo: confirmButton.centerYAnchor),
+			closeButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 90),
+		])
+		content.layoutSubtreeIfNeeded()
+		textView.setFrameSize(NSSize(width: scroll.contentSize.width, height: scroll.contentSize.height))
+		panel.initialFirstResponder = textView
+	}
+
+	required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+	@objc private func dismissLicense() { close() }
+}
+
 private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 	private let socketServer = UnixSocketServer()
 	private let localASR = LocalASRLifecycle()
 	private var agentStarted = false
 	private var statusItem: NSStatusItem?
 	private var downloadingKarabiner = false
+	private var licenseWindow: LicenseWindowController?
 	private let karabinerCLI = "/Library/Application Support/org.pqrs/Karabiner-Elements/bin/karabiner_cli"
 	private let karabinerWebsite = URL(string: "https://karabiner-elements.pqrs.org/")!
 	private let karabinerDownload = URL(string: "https://github.com/pqrs-org/Karabiner-Elements/releases/download/v16.3.0/Karabiner-Elements-16.3.0.dmg")!
@@ -2096,8 +2172,32 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 		karabinerItem.toolTip = menuText(.karabinerHelp)
 		menu.addItem(karabinerItem)
 		menu.addItem(.separator())
+		let license = NSMenuItem(title: menuText(.license), action: #selector(showLicenses), keyEquivalent: "")
+		license.target = self
+		menu.addItem(license)
 		let quit = NSMenuItem(title: menuText(.quit), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
 		menu.addItem(quit)
+	}
+
+	@objc private func showLicenses() {
+		do {
+			guard let url = Bundle.main.url(forResource: "OPEN_SOURCE_LICENSES", withExtension: "txt") else {
+				throw failure("LICENSE_MISSING", menuText(.licenseUnavailable))
+			}
+			let text = try String(contentsOf: url, encoding: .utf8)
+			// Recreate on open so a menu-language change applies to this window too.
+			licenseWindow?.close()
+			let controller = LicenseWindowController(text: text)
+			licenseWindow = controller
+			NSApp.activate(ignoringOtherApps: true)
+			controller.showWindow(nil)
+			controller.window?.makeKeyAndOrderFront(nil)
+		} catch {
+			let alert = NSAlert()
+			alert.messageText = menuText(.licenseUnavailable)
+			alert.addButton(withTitle: menuText(.close))
+			alert.runModal()
+		}
 	}
 
 	private func openPrivacySettings(_ pane: String) {
@@ -2358,6 +2458,45 @@ private func runStreamingSelfTest() throws {
 	}
 	Thread.sleep(forTimeInterval: 0.2) // Let the cancellation cleanup request leave the process.
 	guard resultWasExpected else { throw failure("TEST_FAILED", "Unexpected streaming replay result.") }
+}
+
+private func runLicenseSelfTest() throws {
+	guard CommandLine.arguments.count >= 3 else { throw failure("TEST_LICENSE", "Expected a license document path.") }
+	let text = try String(contentsOfFile: CommandLine.arguments[2], encoding: .utf8)
+	for marker in ["PROJECT LICENSE", "Copyright (c) 2026 yizhouxw", "Copyright (c) 2026 John Yin",
+		"MIT License", "Apache License", "Qwen3-ASR-0.6B-4bit", "Whisper", "NPM COMPONENT", "PYTHON COMPONENT"] {
+		guard text.contains(marker) else { throw failure("TEST_LICENSE", "Missing license section: \(marker)") }
+	}
+	if CommandLine.arguments.count > 3 {
+		_ = NSApplication.shared
+		NSApp.setActivationPolicy(.accessory)
+		NSApp.finishLaunching()
+		let controller = LicenseWindowController(text: text)
+		guard let window = controller.window, let content = window.contentView else { throw failure("TEST_LICENSE", "No license window.") }
+		precondition(!controller.textView.isEditable && controller.textView.isSelectable)
+		precondition(window.styleMask.contains(.closable) && window.styleMask.contains(.resizable))
+		precondition(controller.confirmButton.keyEquivalent == "\r" && controller.closeButton.keyEquivalent == "\u{1b}")
+		controller.showWindow(nil)
+		window.makeKeyAndOrderFront(nil)
+		RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+		content.layoutSubtreeIfNeeded()
+		controller.textView.scrollRangeToVisible(NSRange(location: 0, length: 0))
+		content.displayIfNeeded()
+		guard let bitmap = content.bitmapImageRepForCachingDisplay(in: content.bounds) else { throw failure("TEST_LICENSE", "No license preview.") }
+		content.cacheDisplay(in: content.bounds, to: bitmap)
+		try bitmap.representation(using: .png, properties: [:])!.write(to: URL(fileURLWithPath: CommandLine.arguments[3]))
+		controller.confirmButton.performClick(nil)
+		precondition(!window.isVisible)
+		controller.showWindow(nil)
+		controller.closeButton.performClick(nil)
+		precondition(!window.isVisible)
+	}
+	print("License self-test passed (project, model and dependency text; optional preview and dismiss controls).")
+}
+
+if CommandLine.arguments.contains("--license-self-test") {
+	do { try runLicenseSelfTest(); exit(EXIT_SUCCESS) }
+	catch { FileHandle.standardError.write(Data("\(error)\n".utf8)); exit(EXIT_FAILURE) }
 }
 
 if CommandLine.arguments.contains("--streaming-self-test") {

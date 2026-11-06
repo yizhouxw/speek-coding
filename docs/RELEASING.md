@@ -17,6 +17,8 @@ npm ci
 npm run check
 uvx pip-audit --no-deps --disable-pip \
   --requirement packaging/requirements-asr.txt
+uvx pip-audit --no-deps --disable-pip \
+  --requirement packaging/requirements-mlx.txt
 git diff --check
 ```
 
@@ -28,7 +30,7 @@ git diff --check
 
 `.github/workflows/release.yml` 在推送 `vX.Y.Z` 标签时运行，也可在 Actions 中选择已有标签手动重试。标签必须带注释，指向 GitHub `master` 的最新提交，并与 `package.json` 版本及 `CHANGELOG.md` 中非空的 `## [X.Y.Z]` 节一致。
 
-流水线分别在 arm64 和 Intel macOS 上运行测试、构建及包验证，全部成功后创建 GitHub **常规 Release** 并标记为 Latest，上传文件名带 `-dev-` 的两个安装包和 `SHA256SUMS.txt`。安装器未签名、未公证；标准干净 runner 没有本机开发身份时，App 使用 ad-hoc 签名。仅供开发验证，不应作为正式发布。macOS 可能阻止安装或运行，升级后权限也可能需要重新授权。不需要配置 Apple 签名凭据。
+流水线分别在 arm64 和 Intel macOS 上运行测试、构建及包验证，全部成功后创建 GitHub **常规 Release** 并标记为 Latest，上传文件名带 `-dev-` 的两个安装包、各架构的 `LICENSES` 文本和 `SHA256SUMS.txt`。安装器未签名、未公证；标准干净 runner 没有本机开发身份时，App 使用 ad-hoc 签名。仅供开发验证，不应作为正式发布。macOS 可能阻止安装或运行，升级后权限也可能需要重新授权。不需要配置 Apple 签名凭据。
 
 确认目标 GitHub 仓库及发布权限，更新版本和变更记录，提交并推送后执行：
 

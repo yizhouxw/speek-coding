@@ -1,0 +1,133 @@
+{
+  "external": [
+    {
+      "kind": "model weights / 模型权重",
+      "name": "Qwen3-ASR-0.6B and mlx-community/Qwen3-ASR-0.6B-4bit",
+      "license": "Apache-2.0",
+      "source": "https://huggingface.co/mlx-community/Qwen3-ASR-0.6B-4bit/tree/313d850181767edf09f00a9c289becca70e58cd0",
+      "scope": "Default Apple Silicon model, downloaded separately. Converted from https://huggingface.co/Qwen/Qwen3-ASR-0.6B using mlx-audio; not bundled in the installer.",
+      "file": "upstream/Qwen3-ASR-Apache-2.0.txt"
+    },
+    {
+      "kind": "model weights / 模型权重",
+      "name": "OpenAI Whisper, large-v3-turbo and faster-whisper converted weights",
+      "license": "MIT",
+      "source": "https://github.com/openai/whisper",
+      "scope": "Default Intel / optional Whisper engine. Weights are downloaded separately; the upstream MIT license applies to the code and official model weights.",
+      "file": "upstream/Whisper-MIT.txt"
+    },
+    {
+      "kind": "optional integration / 可选集成",
+      "name": "whisper.cpp",
+      "license": "MIT",
+      "source": "https://github.com/ggml-org/whisper.cpp",
+      "scope": "Optional externally installed transcription engine; its executable is not bundled.",
+      "file": "upstream/whisper.cpp-MIT.txt"
+    },
+    {
+      "kind": "external integration / 外部集成",
+      "name": "Karabiner-Elements",
+      "license": "Unlicense",
+      "source": "https://github.com/pqrs-org/Karabiner-Elements",
+      "scope": "Installed separately for keyboard and DJI triggers; not redistributed in this package.",
+      "file": "upstream/Karabiner-Unlicense.txt"
+    },
+    {
+      "kind": "runtime build tooling / 运行时构建工具",
+      "name": "python-build-standalone",
+      "license": "MPL-2.0",
+      "source": "https://github.com/astral-sh/python-build-standalone",
+      "scope": "Build tooling for the bundled CPython runtime. CPython's own license and historical notices are reproduced separately below. The MPL-2.0 full text also accompanies dependencies using MPL-2.0.",
+      "file": "upstream/python-build-standalone.txt"
+    },
+    {
+      "kind": "native build dependency / 原生组件",
+      "name": "cpu_features",
+      "license": "Apache-2.0",
+      "source": "https://github.com/google/cpu_features",
+      "scope": "CTranslate2 CPU inference build dependency (including transitive/header-only components); availability depends on architecture.",
+      "file": "native/cpu_features.txt"
+    },
+    {
+      "kind": "native build dependency / 原生组件",
+      "name": "spdlog",
+      "license": "MIT",
+      "source": "https://github.com/gabime/spdlog",
+      "scope": "CTranslate2 CPU inference build dependency (including transitive/header-only components); availability depends on architecture.",
+      "file": "native/spdlog.txt"
+    },
+    {
+      "kind": "native build dependency / 原生组件",
+      "name": "Ruy",
+      "license": "Apache-2.0",
+      "source": "https://github.com/google/ruy",
+      "scope": "CTranslate2 CPU inference build dependency (including transitive/header-only components); availability depends on architecture.",
+      "file": "native/Ruy.txt"
+    },
+    {
+      "kind": "native build dependency / 原生组件",
+      "name": "cpuinfo",
+      "license": "BSD-2-Clause",
+      "source": "https://github.com/pytorch/cpuinfo",
+      "scope": "CTranslate2 CPU inference build dependency (including transitive/header-only components); availability depends on architecture.",
+      "file": "native/cpuinfo.txt"
+    },
+    {
+      "kind": "native build dependency / 原生组件",
+      "name": "fmt",
+      "license": "MIT",
+      "source": "https://github.com/fmtlib/fmt",
+      "scope": "CTranslate2 CPU inference build dependency (including transitive/header-only components); availability depends on architecture.",
+      "file": "native/fmt.txt"
+    },
+    {
+      "kind": "additional CPU runtime / 附加 CPU 运行时",
+      "name": "oneDNN 3.1.1",
+      "license": "Apache-2.0",
+      "source": "https://github.com/oneapi-src/oneDNN/tree/v3.1.1",
+      "scope": "CPU/Intel engine dependency or redistribution terms. Intel binary runtimes are not open-source and are not used by the Apple Silicon Qwen/MLX engine. See the CTranslate2 upstream macOS wheel build recipe for platform selection.",
+      "file": "native/oneDNN-3.1.1.txt"
+    },
+    {
+      "kind": "additional CPU runtime / 附加 CPU 运行时",
+      "name": "LLVM OpenMP",
+      "license": "Apache-2.0 WITH LLVM-exception",
+      "source": "https://github.com/llvm/llvm-project/tree/main/openmp",
+      "scope": "CPU/Intel engine dependency or redistribution terms. Intel binary runtimes are not open-source and are not used by the Apple Silicon Qwen/MLX engine. See the CTranslate2 upstream macOS wheel build recipe for platform selection.",
+      "file": "native/LLVM-OpenMP.txt"
+    },
+    {
+      "kind": "additional CPU runtime / 附加 CPU 运行时",
+      "name": "Intel oneAPI MKL / Intel runtime distribution",
+      "license": "Intel Simplified Software License (October 2022)",
+      "source": "https://pypi.org/project/mkl-include/2023.2.0/",
+      "scope": "CPU/Intel engine dependency or redistribution terms. Intel binary runtimes are not open-source and are not used by the Apple Silicon Qwen/MLX engine. See the CTranslate2 upstream macOS wheel build recipe for platform selection.",
+      "file": "native/mkl-include-2023.2-0.txt"
+    },
+    {
+      "kind": "additional CPU runtime / 附加 CPU 运行时",
+      "name": "Intel OpenMP runtime distribution",
+      "license": "Intel End User License Agreement for Developer Tools (April 2023)",
+      "source": "https://pypi.org/project/intel-openmp/2023.2.0/",
+      "scope": "CPU/Intel engine dependency or redistribution terms. Intel binary runtimes are not open-source and are not used by the Apple Silicon Qwen/MLX engine. See the CTranslate2 upstream macOS wheel build recipe for platform selection.",
+      "file": "native/intel-openmp-2023.2-0.txt"
+    }
+  ],
+  "wheel_fallbacks": {
+    "ctranslate2": {
+      "version": "4.8.1",
+      "source": "https://github.com/OpenNMT/CTranslate2/blob/v4.8.1/LICENSE",
+      "file": "upstream/CTranslate2-MIT.txt"
+    },
+    "flatbuffers": {
+      "version": "25.12.19",
+      "source": "https://github.com/google/flatbuffers/blob/v25.12.19/LICENSE",
+      "file": "upstream/FlatBuffers-Apache-2.0.txt"
+    },
+    "tokenizers": {
+      "version": "0.23.1",
+      "source": "https://github.com/huggingface/tokenizers/blob/v0.23.1/LICENSE",
+      "file": "upstream/Tokenizers-Apache-2.0.txt"
+    }
+  }
+}

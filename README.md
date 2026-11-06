@@ -6,6 +6,8 @@ SpeekCoding is a local-first dictation tool for macOS. Tap Fn to start live tran
 
 ## Requirements and project status
 
+The menu's **License…** item opens an offline, scrollable document containing the project license, dependency and runtime notices, and model-weight licenses. Text can be selected and copied. Use **OK**, **Close**, Return, Escape, or the window close button to dismiss it.
+
 - Apple Silicon: macOS 14 or later for Qwen3-ASR / MLX. Intel: macOS 13 or later with faster-whisper. A microphone is required.
 - Karabiner-Elements for global Fn and optional DJI Mic Mini button triggers.
 - Microphone permission for recording; Accessibility and event posting permissions for automatic paste and Return.

@@ -1,0 +1,3 @@
+# Preserve upstream legal text formatting, including existing indentation.
+licenses/**/*.txt -whitespace
+licenses/LICENSES.txt -whitespace

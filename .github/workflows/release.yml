@@ -77,11 +77,14 @@ jobs:
           npm run package:mac
           version="$(node -p "require('./package.json').version")"
           mv "dist/SpeekCoding-${version}-${SPEEK_PACKAGE_ARCH}.pkg" "dist/SpeekCoding-${version}-dev-${SPEEK_PACKAGE_ARCH}.pkg"
+          cp "build/package-${SPEEK_PACKAGE_ARCH}/root/Applications/SpeekCoding.app/Contents/Resources/OPEN_SOURCE_LICENSES.txt" "dist/SpeekCoding-${version}-LICENSES-${SPEEK_PACKAGE_ARCH}.txt"
       - name: Upload verified package
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: package-${{ matrix.arch }}
-          path: dist/*.pkg
+          path: |
+            dist/*.pkg
+            dist/*-LICENSES-*.txt
           if-no-files-found: error
           retention-days: 7
 
@@ -108,8 +111,11 @@ jobs:
           version="${RELEASE_TAG#v}"
           arm="SpeekCoding-${version}-dev-arm64.pkg"
           intel="SpeekCoding-${version}-dev-x86_64.pkg"
+          arm_license="SpeekCoding-${version}-LICENSES-arm64.txt"
+          intel_license="SpeekCoding-${version}-LICENSES-x86_64.txt"
           test -f "dist/$arm" && test -f "dist/$intel"
-          (cd dist && sha256sum "$arm" "$intel" > SHA256SUMS.txt)
+          test -f "dist/$arm_license" && test -f "dist/$intel_license"
+          (cd dist && sha256sum "$arm" "$intel" "$arm_license" "$intel_license" > SHA256SUMS.txt)
           node scripts/release-notes.mjs "$RELEASE_TAG" > release-notes.md
-          printf '\n安装包说明：附件中带 -dev- 的安装包未签名、未公证，App 使用临时 ad-hoc 签名；仅用于开发验证，升级后可能需要重新授权。macOS 可能阻止安装或运行。\n\n最低系统版本：macOS 13。模型权重不包含在安装包中。\n' >> release-notes.md
-          gh release create "$RELEASE_TAG" "dist/$arm" "dist/$intel" dist/SHA256SUMS.txt --verify-tag --latest --title "SpeekCoding $version" --notes-file release-notes.md
+          printf '\n安装包说明：附件中带 -dev- 的安装包未签名、未公证，App 使用临时 ad-hoc 签名；仅用于开发验证，升级后可能需要重新授权。macOS 可能阻止安装或运行。\n\n最低系统版本：Apple Silicon 为 macOS 14，Intel 为 macOS 13。模型权重不包含在安装包中。项目、依赖及模型许可证可从应用菜单 License 查看，或下载对应架构的 LICENSES 文档。\n' >> release-notes.md
+          gh release create "$RELEASE_TAG" "dist/$arm" "dist/$intel" "dist/$arm_license" "dist/$intel_license" dist/SHA256SUMS.txt --verify-tag --latest --title "SpeekCoding $version" --notes-file release-notes.md

@@ -12,6 +12,8 @@ SpeekCoding's self-contained macOS package includes these third-party runtimes a
 
 The package build keeps the original license files next to the redistributed binaries. Refer to those files for the complete terms and copyright notices.
 
+The License menu displays `OPEN_SOURCE_LICENSES.txt`, assembled from the actual package payload before signing. It includes npm/Python transitive and vendored notices, Node.js/CPython runtime notices, the upstream licenses for models and optional integrations, and notices for PyAV's bundled FFmpeg and codec libraries. Some native libraries use LGPL/GPL or additional runtime redistribution terms; SpeekCoding's MIT license does not replace those terms. Source locations and license provenance are recorded in the document and `licenses/` catalog. The source-install catalog also lists optional platform-specific CPU dependencies.
+
 Karabiner-Elements and Qwen / Whisper model weights are not included in the package. They are downloaded or installed separately and remain subject to their own licenses and terms. Karabiner-Elements is required for the current Fn and DJI trigger workflow. The hardware-trigger workflow credits the MIT-licensed `Johnixr/dji-mic-dictation` project; see the repository README for the source link.
 
 The default Qwen3-ASR-0.6B 4-bit weights are distributed separately by [mlx-community](https://huggingface.co/mlx-community/Qwen3-ASR-0.6B-4bit), converted from [Qwen/Qwen3-ASR-0.6B](https://huggingface.co/Qwen/Qwen3-ASR-0.6B), under Apache-2.0. The [MLX runtime adapter](https://github.com/moona3k/mlx-qwen3-asr) is a community implementation.
