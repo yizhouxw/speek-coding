@@ -1,0 +1,43 @@
+CHANGELOG.md
+  s_4e76f3841c6a61::t_093557af76be61 7-9
+README.md
+  s_4e76f3841c6a61::t_3dff0ce4e1cbe3 5,9,65-75
+README.zh-CN.md
+  s_4e76f3841c6a61::t_c3bae405d12454 9,21,120,122,124,126,129-130,134-149,181
+cli/lib/actions.mjs
+  s_79266609901a73::t_eb6a67833ab5e3 8,417-419,553-555,557,564,576,582,588-590
+cli/lib/args.mjs
+  s_4e76f3841c6a61::t_aa32571850e5ef 23,39
+packaging/requirements-mlx.txt
+  s_4e76f3841c6a61::t_4055e265880391 1-530
+scripts/speek-hud.swift
+  s_4e76f3841c6a61::t_461cd3c98893da 182,366,374,381
+scripts/validate.sh
+  s_79266609901a73::t_cbac7f37191adb 27
+test/qwen-streaming.py
+  s_79266609901a73::t_7be614d5c14309 1-190
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "08b7d5f5ddf3c46418017d1035f4ecea6bd4fcba",
+  "prompts": {},
+  "sessions": {
+    "s_4e76f3841c6a61": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1afe3-7832-7360-9f7c-7427c849ef34",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "yizhouxw <54161870+yizhouxw@users.noreply.github.com>"
+    },
+    "s_79266609901a73": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aed5-f553-7e21-a1cb-9d3e1da350d9",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "yizhouxw <54161870+yizhouxw@users.noreply.github.com>"
+    }
+  }
+}
