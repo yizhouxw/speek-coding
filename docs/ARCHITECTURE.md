@@ -19,10 +19,10 @@ Fn / DJI HID ─► Karabiner ─► speek-command ─────────�
                  AVAudioEngine / CoreAudio   permission APIs          AppKit / CGEvent
                          │                  AVFoundation / AX / CG      pasteboard + postToPid
                          ▼                         │                          │
-                 mono 16-bit WAV                   │                          ▼
+                 mono PCM16 stream / WAV                   │                          ▼
                          │                         │                 recording-start target PID
                          ▼                         │
-                 URLSession multipart              │
+                 URLSession PCM sessions / multipart              │
                          │                         │
                          ▼                         │
                OpenAI-compatible ASR ◄─────────────┘
@@ -36,11 +36,12 @@ Fn / DJI HID ─► Karabiner ─► speek-command ─────────�
 ```text
 com.speek.coding.asr LaunchAgent
         │
+        ├── Qwen3-ASR-0.6B 4-bit / MLX (Apple Silicon, default)
         ├── faster-whisper
         └── whisper.cpp
 ```
 
-ASR LaunchAgent 不打开音频设备、不读剪贴板、不发送键盘事件，也不检测 TCC 权限。它只在 loopback 接收 App 发出的 HTTP WAV 请求并返回文本；服务限制请求大小并拒绝请求级模型覆盖，避免被误暴露到局域网或用于触发任意模型下载。
+ASR LaunchAgent 不打开音频设备、不读剪贴板、不发送键盘事件，也不检测 TCC 权限。它只在 loopback 接收 App 发出的 HTTP PCM 流或 WAV 请求并返回文本；服务限制请求大小并拒绝请求级模型覆盖，避免被误暴露到局域网或用于触发任意模型下载。
 
 App 启动时在配置为本地 ASR 且未使用模拟转写时尝试启动已安装的服务，正常退出时卸载当前会话中的服务；LaunchAgent 的登录启动和 `speek start` / `speek stop` 仍可独立管理服务。内置 Python 在服务、前台服务和模型下载进程中禁用字节码写入，以保护 App 签名。
 
@@ -158,3 +159,13 @@ idle ── toggle/save ──► starting ──► recording ── toggle/wat
 新配置统一使用 `SPEEK_*` 环境变量。安装器仍能识别旧安装路径和旧 Karabiner 托管规则，仅用于迁移清理；已退役的旧录音状态机不再安装或运行。
 
 迁移识别同时覆盖 `~/.config/...` 和安装后物化的 `/Users/<name>/.config/...` 绝对命令路径，并识别 0.1.x 的旧规则描述。`doctor` 只有在目标 profile 中恰好存在一条且内容与当前模板一致的托管规则时才报告 `profileCurrent=true`，避免旧规则在前抢先吞掉 Fn。
+
+## 实时转写
+
+Qwen 使用同一 loopback HTTP 服务提供 `/v1/audio/streams` 会话接口。App 以约 200 ms 聚合录音回调，按顺序发送 PCM16；服务每秒解码，返回完整草稿以替换上一版。所有模型加载和推理都归同一线程所有，避免 Metal 跨线程上下文问题。窗口限制为 20 秒，长录音在接近停顿的窗口边界提交；单次录音上限为 5 分钟。30 秒上下文在本机的 44 秒重复口述回放中出现了整句重复，因此使用更短的窗口，保留音频里真实的重复，不对输出文字做去重。
+
+POST `/v1/audio/streams` 接收 JSON（model、language、prompt、sample_rate=16000），返回随机会话 id。POST `/{id}/append` 接收 little-endian PCM16 单声道音频，Content-Type 为 application/octet-stream，X-Speek-Sequence 从 0 递增；每块最多 64000 字节。所有音频发完后向 `/{id}/finish` POST 一个哨兵字节，使用下一个序号，返回 is_final=true。`/{id}/cancel` POST 一个字节释放会话。拒绝浏览器 Origin、乱序、超限、过期、并发录音和请求级模型替换。
+
+HUD 从独立的 live_transcript 状态显示最近草稿，草稿不会写入剪贴板。停止时先停止采集，排空剩余分块，再定稿。流式失败时保留 WAV 作同模型文件转写回退；取消或旧会话回调不得触发交付。传统文件接口与非 Qwen 引擎继续可用。
+
+可用原生 App 可执行文件的 `--streaming-self-test <transcription-url> <model> <16000-Hz-mono-WAV>` 重放音频验证真实客户端，无需打开麦克风或写入剪贴板；添加 `--cancel` 验证取消。

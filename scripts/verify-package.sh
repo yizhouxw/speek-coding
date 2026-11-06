@@ -40,6 +40,9 @@ done
 
 PATH=/usr/bin:/bin "$NODE" --version >/dev/null
 PATH=/usr/bin:/bin "$PYTHON" -B -c 'import faster_whisper; print(faster_whisper.__version__)' >/dev/null
+if [ "$EXPECTED_ARCH" = "arm64" ]; then
+	PATH=/usr/bin:/bin "$PYTHON" -B -c 'import mlx.core, mlx_qwen3_asr' >/dev/null
+fi
 PATH=/usr/bin:/bin "$NODE" "$CLI" --version >/dev/null
 /usr/bin/codesign --verify --deep --strict "$APP"
 

@@ -5,7 +5,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { promisify } from 'node:util';
 
-import { DEFAULT_CONFIG, loadConfig, normalizeConfig, writeConfig } from './config.mjs';
+import { DEFAULT_CONFIG, QWEN_MODEL, loadConfig, normalizeConfig, writeConfig } from './config.mjs';
 import {
 	findManagedEntries,
 	findProfile,
@@ -414,6 +414,9 @@ async function installSpeekCodingApp(runtime) {
 	const previousManifest = await readManifest(runtime);
 	if (
 		previousManifest?.appSigningIdentity &&
+		// This marker is not a certificate identity. Packaged-to-source updates
+		// still verify both signatures and compare designated requirements below.
+		previousManifest.appSigningIdentity !== 'packaged-distribution' &&
 		previousManifest.appSigningIdentity !== signingIdentity
 	) {
 		throw createCommandError(
@@ -547,15 +550,18 @@ async function checkAudioRuntime(runtime) {
 }
 
 export async function installAsrRuntime(runtime) {
+	const config = runtime.configFilePath ? await loadConfig(runtime) : DEFAULT_CONFIG;
+	const qwen = config.asrBackend === 'qwen-mlx';
+	const packageName = qwen ? 'mlx-qwen3-asr==0.4.4' : 'faster-whisper>=1.2,<2';
 	if (runtime.bundledPythonPath && (await pathExists(runtime.bundledPythonPath))) {
-		await execFile(runtime.bundledPythonPath, ['-B', '-c', 'import faster_whisper'], { env: runtime.env });
+		await execFile(runtime.bundledPythonPath, ['-B', '-c', qwen ? 'import mlx_qwen3_asr, mlx.core' : 'import faster_whisper'], { env: runtime.env });
 		await fs.mkdir(runtime.configDir, { recursive: true });
 		await fs.copyFile(runtime.asrServerSourcePath, runtime.asrServerTargetPath);
 		await fs.chmod(runtime.asrServerTargetPath, 0o755);
 		return {
 			pythonBin: runtime.bundledPythonPath,
 			asrServerPath: runtime.asrServerTargetPath,
-			package: 'bundled faster-whisper',
+			package: qwen ? 'bundled Qwen3-ASR / MLX' : 'bundled faster-whisper',
 		};
 	}
 	const venvPython = `${runtime.venvDir}/bin/python`;
@@ -567,18 +573,21 @@ export async function installAsrRuntime(runtime) {
 	await fs.mkdir(runtime.configDir, { recursive: true });
 	await fs.copyFile(runtime.asrServerSourcePath, runtime.asrServerTargetPath);
 	await fs.chmod(runtime.asrServerTargetPath, 0o755);
-	await execFile(venvPython, ['-m', 'pip', 'install', 'faster-whisper>=1.2,<2'], {
+	await execFile(venvPython, ['-m', 'pip', 'install', ...(qwen ? [packageName, 'mlx==0.30.6'] : [packageName])], {
 		env: runtime.env,
 	});
 	return {
 		pythonBin: venvPython,
 		asrServerPath: runtime.asrServerTargetPath,
-		package: 'faster-whisper>=1.2,<2',
+		package: packageName,
 	};
 }
 
 export function mergeConfig(existingConfig, overrides = {}) {
 	const merged = { ...existingConfig, ...overrides };
+	if (overrides.asrBackend && overrides.asrBackend !== existingConfig.asrBackend && overrides.asrModel == null) {
+		merged.asrModel = overrides.asrBackend === 'qwen-mlx' ? QWEN_MODEL : 'whisper-large-v3-turbo';
+	}
 	const hasLocalServerOverride = overrides.asrHost != null || overrides.asrPort != null;
 	if (hasLocalServerOverride && overrides.asrApiUrl == null) {
 		try {

@@ -24,6 +24,7 @@ swiftc scripts/speek-coding-app.swift -O -o "$TMP_DIR/speek-coding-app-validate"
 	-framework CoreAudio \
 	-framework CoreGraphics
 "$TMP_DIR/speek-coding-app-validate" --localization-self-test
+python3 -B test/qwen-streaming.py --native-client "$TMP_DIR/speek-coding-app-validate"
 node --check cli/index.mjs
 for file in cli/lib/*.mjs; do
 	node --check "$file"

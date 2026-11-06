@@ -2,18 +2,22 @@ import { randomUUID } from 'node:crypto';
 import fs from 'node:fs/promises';
 import { isIP } from 'node:net';
 
+export const QWEN_MODEL = 'mlx-community/Qwen3-ASR-0.6B-4bit';
+const appleSilicon = process.platform === 'darwin' && process.arch === 'arm64';
+
 export const DEFAULT_CONFIG = Object.freeze({
 	audioFeedbackEnabled: true,
 	preconfirmSoundName: 'Sosumi',
 	readyOverlayEnabled: true,
 	reviewWindowSeconds: 3,
 	asrApiUrl: 'http://127.0.0.1:8000/v1/audio/transcriptions',
-	asrModel: 'whisper-large-v3-turbo',
+	asrModel: appleSilicon ? QWEN_MODEL : 'whisper-large-v3-turbo',
+	asrStreaming: true,
 	asrApiKeyEnv: 'ASR_API_KEY',
 	asrLanguage: '',
 	asrPrompt:
 		'中英混合软件工程口述 / Mixed Chinese-English software engineering dictation. 保持说话者原始的中英文切换；preserve code identifiers, commands, filenames, acronyms, product names, and punctuation. 不要互相翻译中英文。',
-	asrBackend: 'faster-whisper',
+	asrBackend: appleSilicon ? 'qwen-mlx' : 'faster-whisper',
 	asrHost: '127.0.0.1',
 	asrPort: 8000,
 	asrDevice: 'cpu',
@@ -127,21 +131,19 @@ export function normalizeSoundName(value, fallback = DEFAULT_CONFIG.preconfirmSo
 export function normalizeConfig(config = {}) {
 	const preconfirmSoundName = normalizeSoundName(config.preconfirmSoundName, DEFAULT_CONFIG.preconfirmSoundName);
 	const derivedAudioFeedbackEnabled = preconfirmSoundName !== '';
+	const asrBackend = normalizeChoice(config.asrBackend, ['qwen-mlx', 'faster-whisper', 'whisper-cpp'], DEFAULT_CONFIG.asrBackend);
 	return {
 		audioFeedbackEnabled: parseBoolean(config.audioFeedbackEnabled, derivedAudioFeedbackEnabled),
 		preconfirmSoundName,
 		readyOverlayEnabled: parseBoolean(config.readyOverlayEnabled, DEFAULT_CONFIG.readyOverlayEnabled),
 		reviewWindowSeconds: parsePositiveNumber(config.reviewWindowSeconds, DEFAULT_CONFIG.reviewWindowSeconds),
 		asrApiUrl: parseString(config.asrApiUrl, DEFAULT_CONFIG.asrApiUrl).trim(),
-		asrModel: parseString(config.asrModel, DEFAULT_CONFIG.asrModel).trim(),
+		asrModel: parseString(config.asrModel, asrBackend === 'qwen-mlx' ? QWEN_MODEL : 'whisper-large-v3-turbo').trim(),
+		asrStreaming: parseBoolean(config.asrStreaming, DEFAULT_CONFIG.asrStreaming),
 		asrApiKeyEnv: parseString(config.asrApiKeyEnv, DEFAULT_CONFIG.asrApiKeyEnv).trim(),
 		asrLanguage: normalizeAsrLanguage(config.asrLanguage),
 		asrPrompt: parseString(config.asrPrompt, DEFAULT_CONFIG.asrPrompt),
-		asrBackend: normalizeChoice(
-			config.asrBackend,
-			['faster-whisper', 'whisper-cpp'],
-			DEFAULT_CONFIG.asrBackend,
-		),
+		asrBackend,
 		asrHost: normalizeAsrHost(config.asrHost),
 		asrPort: parsePositiveInteger(config.asrPort, DEFAULT_CONFIG.asrPort),
 		asrDevice: parseString(config.asrDevice, DEFAULT_CONFIG.asrDevice).trim(),
@@ -210,6 +212,7 @@ export async function loadConfig(runtime) {
 			reviewWindowSeconds: env.SPEEK_REVIEW_WINDOW_SECONDS ?? env.DJI_REVIEW_WINDOW_SECONDS,
 			asrApiUrl: env.SPEEK_ASR_API_URL,
 			asrModel: env.SPEEK_ASR_MODEL,
+			asrStreaming: env.SPEEK_ASR_STREAMING,
 			asrApiKeyEnv: env.SPEEK_ASR_API_KEY_ENV,
 			asrLanguage: env.SPEEK_ASR_LANGUAGE,
 			asrPrompt: env.SPEEK_ASR_PROMPT,
@@ -253,6 +256,7 @@ export async function writeConfig(runtime, config) {
 		`SPEEK_REVIEW_WINDOW_SECONDS=${serializeEnvNumber(normalized.reviewWindowSeconds)}`,
 		`SPEEK_ASR_API_URL=${serializeEnvString(normalized.asrApiUrl)}`,
 		`SPEEK_ASR_MODEL=${serializeEnvString(normalized.asrModel)}`,
+		`SPEEK_ASR_STREAMING=${serializeEnvValue(normalized.asrStreaming)}`,
 		`SPEEK_ASR_API_KEY_ENV=${serializeEnvString(normalized.asrApiKeyEnv)}`,
 		`SPEEK_ASR_LANGUAGE=${serializeEnvString(normalized.asrLanguage)}`,
 		`SPEEK_ASR_PROMPT=${serializeEnvString(normalized.asrPrompt)}`,

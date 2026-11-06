@@ -1,0 +1,5 @@
+-r requirements-asr.in
+mlx==0.30.6
+mlx-metal==0.30.6
+mlx-qwen3-asr==0.4.4
+regex==2026.9.29

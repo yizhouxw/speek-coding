@@ -20,7 +20,7 @@ Manage:
 
 Advanced:
   install      Install only the recording and Karabiner workflow
-  asr-install  Install local faster-whisper dependencies
+  asr-install  Install the configured local transcription engine
   asr-server   Run the OpenAI-compatible ASR server in the foreground
   configure    Alias for config
 
@@ -36,7 +36,7 @@ Options:
   --asr-language <lang>  auto or a fixed language code such as zh/en
   --asr-prompt <text>    Optional transcription vocabulary hint
   --fake-transcript <t>  Bypass ASR with a fixed transcript
-  --asr-backend <name>   faster-whisper | whisper-cpp
+  --asr-backend <name>   qwen-mlx | faster-whisper | whisper-cpp
   --asr-host <host>      Local ASR loopback bind host
   --asr-port <port>      Local ASR bind port
   --asr-device <device>  faster-whisper device, e.g. cpu

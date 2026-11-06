@@ -6,7 +6,7 @@
 
 SpeekCoding 是面向 macOS 的本地优先语音输入工具：按一下开始说话，再按一下停止录音。应用会将语音转成文字，放入剪贴板，并按你的设置粘贴或发送到开始录音时的应用。它适用于 Codex、Claude Code、Cursor、终端，以及其他支持粘贴的输入框。
 
-- **语音转写**：默认使用本机 faster-whisper，支持中英文混合口述和代码相关词汇；也可配置其他兼容服务。
+- **语音转写**：Apple Silicon 默认使用本机 Qwen3-ASR-0.6B 4-bit / MLX，边说边转写并修正临时结果；也可配置其他兼容服务。
 - **全局触发**：单独按键盘 Fn 键，或另外配置 DJI Mic Mini 发射器的连接键。Fn 组合键保留系统和应用原有行为。全局按键由 Karabiner-Elements 提供。
 - **可选交付方式**：默认自动粘贴并按 Return；也可以只粘贴，或只复制到剪贴板。
 - **菜单栏操作**：选择麦克风、在“功能设置”中切换自动发送、查看和设置权限、检查 Karabiner-Elements，以及退出应用。
@@ -18,7 +18,7 @@ GitHub 仓库以当前代码快照作为新的历史起点，早期开发分支�
 
 ## 安装和首次设置
 
-需要 macOS 13 或更高版本，以及一个可用的麦克风。最终用户无需安装 Node.js、Python、Homebrew 或 Xcode。Fn 和 DJI 按钮触发需要 [Karabiner-Elements](https://karabiner-elements.pqrs.org/)；DJI 按钮还需要连接 DJI Mic Mini 接收器。
+Apple Silicon 需要 macOS 14 或更高版本以运行 Qwen / MLX；Intel 使用 faster-whisper，需要 macOS 13 或更高版本。还需要一个可用的麦克风。最终用户无需安装 Node.js、Python、Homebrew 或 Xcode。Fn 和 DJI 按钮触发需要 [Karabiner-Elements](https://karabiner-elements.pqrs.org/)；DJI 按钮还需要连接 DJI Mic Mini 接收器。
 
 1. **下载安装包。** 从项目的 [Releases](https://github.com/yizhouxw/speek-coding/releases) 页面选择与你的 Mac 架构匹配的 `SpeekCoding-<版本>-<架构>.pkg`：Apple Silicon 使用 `arm64`，Intel 使用 `x86_64`。不确定架构时，可在终端运行 `uname -m`。如果尚无适合你电脑的发布包，请参考[源码构建说明](CONTRIBUTING.md)。
 2. **安装并打开应用。** 双击 `.pkg`，按安装器提示完成安装，然后从“应用程序”打开 SpeekCoding。它在菜单栏显示为代码尖括号和声波图标，而不是普通窗口。安装包还会安装 `speek` 命令。
@@ -117,18 +117,35 @@ speek config --input-device "MacBook Pro Microphone"
 
 ## 转写引擎
 
-### 默认：faster-whisper
+### Apple Silicon 默认：Qwen3-ASR-0.6B / MLX
 
-`speek setup` 直接启用安装包内的 Python 和 faster-whisper，并让它作为本地后台服务运行，不会在用户机执行 `pip install`。默认模型是 `whisper-large-v3-turbo`；首次真实转写时仍会下载模型权重。
+默认使用开源的 `mlx-community/Qwen3-ASR-0.6B-4bit`，通过 MLX 利用 Apple GPU。模型版本固定为 `313d850181767edf09f00a9c289becca70e58cd0`，首次使用时下载权重，已缓存模型在后台服务启动时预热；安装包内置 Python 和模型运行依赖，不会在用户机执行 `pip install`。
 
-首次下载和加载模型时，悬浮提示会显示当前阶段；等待期间再次按 Fn（或 DJI 触发键）即可取消本次转写和正在进行的模型下载，也可以运行 `speek cancel`。下次转写会重新尝试下载，已缓存的文件可复用。下载受网络和磁盘空间影响，首次准备可能需要几分钟。
+按 Fn 开始后，App 持续向本机服务发送 16 kHz 单声道 PCM16 音频；模型每秒更新一次草稿，悬浮窗显示最新文字。草稿可以结合上下文纠错。再次按 Fn 时发送剩余音频、取得最终结果，再复制、粘贴或发送。流式连接失败时，会使用本次录音尝试文件转写；取消时清理会话及临时录音。音频不会发送到云端。
 
-低配置机器可以先用小模型验证：
+已有安装会保留原引擎。更新应用后切换：
 
 ```bash
-speek config --asr-model tiny
+speek config --asr-backend qwen-mlx --asr-model mlx-community/Qwen3-ASR-0.6B-4bit
+speek asr-install
 speek restart
 ```
+
+源码安装时 `asr-install` 会在产品私有 Python 环境安装 MLX 依赖。修改配置文件中的 `SPEEK_ASR_STREAMING=0` 可关闭实时转写，使用同一 Qwen 模型进行文件转写。Qwen 输入固定为 16 kHz；保留默认 `SPEEK_AUDIO_SAMPLE_RATE=16000`。
+
+首次下载和加载期间会显示准备状态。转写等待期间再次按 Fn 可以取消；录音期间按 Fn 表示停止并定稿，悬浮窗 Cancel 按钮随时取消本次录音。
+
+### Intel 默认 / 可选：faster-whisper
+
+Intel 默认使用 `whisper-large-v3-turbo`。Apple Silicon 也可显式选择 Whisper，例如：
+
+```bash
+speek config --asr-backend faster-whisper --asr-model small
+speek asr-install
+speek restart
+```
+
+Whisper 和外部文件接口继续采用停止录音后转写的流程。
 
 ### Apple Silicon：whisper.cpp
 
@@ -161,7 +178,7 @@ speek setup --skip-asr \
   --asr-model your-model
 ```
 
-接口约定：`POST /v1/audio/transcriptions`，multipart 字段包含 `model` 和 `file`，响应为 `{"text":"..."}` 或纯文本。HTTP 请求由 `SpeekCoding.app` 发起；本地 ASR LaunchAgent 只接收 WAV 并返回文本。
+接口约定：`POST /v1/audio/transcriptions`，multipart 字段包含 `model` 和 `file`，响应为 `{"text":"..."}` 或纯文本。HTTP 请求由 `SpeekCoding.app` 发起；本地 ASR LaunchAgent 接收 PCM 音频流或 WAV 并返回文本。
 
 ## 发送策略
 

@@ -26,6 +26,7 @@ import {
 	getKarabinerProfiles,
 	install,
 	installAsrRuntime,
+	mergeConfig,
 	readManifest,
 	testRecord,
 	uninstall,
@@ -33,7 +34,7 @@ import {
 } from './lib/actions.mjs';
 import { HELP_TEXT, parseArgs } from './lib/args.mjs';
 import { sendAgentCommand } from './lib/agent.mjs';
-import { loadConfig } from './lib/config.mjs';
+import { loadConfig, QWEN_MODEL } from './lib/config.mjs';
 import { buildInstallProfilePromptPlan } from './lib/install-profile-plan.mjs';
 import {
 	getBlockingPermissionIssues,
@@ -213,7 +214,7 @@ function buildConfigOverrides(flags) {
 	const asrBackend = parseChoiceFlag(
 		flags.asrBackend,
 		'--asr-backend',
-		['faster-whisper', 'whisper-cpp'],
+		['qwen-mlx', 'faster-whisper', 'whisper-cpp'],
 	);
 	if (asrBackend != null) {
 		overrides.asrBackend = asrBackend;
@@ -312,7 +313,7 @@ async function askTextPrompt(message, initialValue, validate) {
 }
 
 async function collectInteractiveConfig(runtime, overrides = {}) {
-	const currentConfig = { ...DEFAULT_CONFIG, ...(await loadConfig(runtime)), ...overrides };
+	const currentConfig = mergeConfig(await loadConfig(runtime), overrides);
 	const audioInputDeviceName = await askTextPrompt(
 		'Audio input device name',
 		currentConfig.audioInputDeviceName,
@@ -326,6 +327,9 @@ async function collectInteractiveConfig(runtime, overrides = {}) {
 		{ value: 'small', label: 'Small', hint: 'Lower download size and memory use' },
 		{ value: 'tiny', label: 'Tiny', hint: 'Fast hardware and permission testing' },
 	];
+	if (process.arch === 'arm64') {
+		modelOptions.unshift({ value: QWEN_MODEL, label: 'Qwen3-ASR 0.6B · 4-bit MLX', hint: 'Live transcription on Apple Silicon' });
+	}
 	if (!modelOptions.some((option) => option.value === currentConfig.asrModel)) {
 		modelOptions.unshift({
 			value: currentConfig.asrModel,
@@ -358,6 +362,7 @@ async function collectInteractiveConfig(runtime, overrides = {}) {
 	return {
 		audioInputDeviceName: audioInputDeviceName.trim(),
 		asrModel,
+		asrBackend: asrModel === QWEN_MODEL ? 'qwen-mlx' : ['whisper-large-v3-turbo', 'small', 'tiny'].includes(asrModel) ? 'faster-whisper' : currentConfig.asrBackend,
 		deliveryMode,
 		audioFeedbackEnabled: preconfirmSoundName !== '',
 		preconfirmSoundName,

@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
-import { DEFAULT_CONFIG, loadConfig, normalizeConfig, writeConfig } from '../cli/lib/config.mjs';
+import { DEFAULT_CONFIG, QWEN_MODEL, loadConfig, normalizeConfig, writeConfig } from '../cli/lib/config.mjs';
 import { mergeConfig } from '../cli/lib/actions.mjs';
 
 test('normalizeConfig validates service settings', () => {
@@ -23,6 +23,16 @@ test('normalizeConfig validates service settings', () => {
 	assert.equal(normalizeConfig({ asrLanguage: 'zh' }).asrLanguage, 'zh');
 	assert.equal(normalizeConfig({ asrPort: '3.5' }).asrPort, DEFAULT_CONFIG.asrPort);
 	assert.equal(normalizeConfig({ asrHost: '0.0.0.0' }).asrHost, DEFAULT_CONFIG.asrHost);
+});
+
+test('switching local engines selects a matching model and preserves explicit choices', () => {
+	const qwen = mergeConfig({ ...DEFAULT_CONFIG, asrBackend: 'faster-whisper', asrModel: 'turbo' }, { asrBackend: 'qwen-mlx' });
+	assert.equal(qwen.asrModel, QWEN_MODEL);
+	assert.equal(qwen.asrStreaming, true);
+	assert.equal(normalizeConfig({ asrBackend: 'faster-whisper' }).asrModel, 'whisper-large-v3-turbo');
+	assert.equal(normalizeConfig({ asrBackend: 'qwen-mlx' }).asrModel, QWEN_MODEL);
+	assert.equal(mergeConfig(qwen, { asrBackend: 'faster-whisper' }).asrModel, 'whisper-large-v3-turbo');
+	assert.equal(mergeConfig(qwen, { asrBackend: 'whisper-cpp', asrModel: '/tmp/model.bin' }).asrModel, '/tmp/model.bin');
 });
 
 test('loadConfig migrates legacy DJI preferences', async (context) => {

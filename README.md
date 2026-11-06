@@ -2,11 +2,11 @@
 
 English · [简体中文](README.zh-CN.md)
 
-SpeekCoding is a local-first dictation tool for macOS. Tap Fn to start recording and tap it again to transcribe. The app copies the result to the clipboard, then optionally pastes it into the application that was active when recording started. It works with coding assistants, terminals, editors, and other text inputs.
+SpeekCoding is a local-first dictation tool for macOS. Tap Fn to start live transcription and tap it again to finalize the text. The app copies the result to the clipboard, then optionally pastes it into the application that was active when recording started. It works with coding assistants, terminals, editors, and other text inputs.
 
 ## Requirements and project status
 
-- macOS 13 or later, on Apple Silicon or Intel, and a microphone.
+- Apple Silicon: macOS 14 or later for Qwen3-ASR / MLX. Intel: macOS 13 or later with faster-whisper. A microphone is required.
 - Karabiner-Elements for global Fn and optional DJI Mic Mini button triggers.
 - Microphone permission for recording; Accessibility and event posting permissions for automatic paste and Return.
 
@@ -62,7 +62,17 @@ speek uninstall
 
 ## Transcription and privacy
 
-The default backend is local faster-whisper with `whisper-large-v3-turbo`. Smaller models, whisper.cpp, and OpenAI-compatible transcription endpoints are supported. See the [configuration guide in Chinese](README.zh-CN.md#转写引擎).
+Apple Silicon defaults to local **Qwen3-ASR-0.6B, 4-bit, accelerated by MLX**. Audio is sent to the local service while recording; the HUD shows a draft that can be corrected as you speak. Stopping flushes the remaining audio and finalizes before copying or pasting. Intel defaults to faster-whisper. Whisper, whisper.cpp, and OpenAI-compatible file transcription endpoints remain available.
+
+Existing installations keep their configured engine. To switch an Apple Silicon installation after updating the app:
+
+```bash
+speek config --asr-backend qwen-mlx --asr-model mlx-community/Qwen3-ASR-0.6B-4bit
+speek asr-install
+speek restart
+```
+
+The model downloads on first use; cached weights are warmed when the service starts. Streaming uses 16 kHz mono audio and one-second decoding updates. If streaming disconnects, the app attempts file transcription using the retained temporary recording. `SPEEK_ASR_STREAMING=0` in the config disables live transcription. See the [configuration guide in Chinese](README.zh-CN.md#转写引擎).
 
 Default transcription requests stay on the loopback interface. First-use model downloads and optional Karabiner downloads require network access. There is no built-in usage analytics or recording upload service. If you configure a remote ASR endpoint, audio is sent to that provider; HTTPS is required except for loopback addresses.
 

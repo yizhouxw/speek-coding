@@ -330,6 +330,8 @@ private func menuText(_ key: MenuText, _ arguments: CVarArg...) -> String {
 
 private struct AgentConfig {
 	let asrAPIURL: String
+	let asrBackend: String
+	let asrStreaming: Bool
 	let asrModel: String
 	let asrLanguage: String
 	let asrPrompt: String
@@ -401,10 +403,19 @@ private struct AgentConfig {
 			default: 16_000
 		)))
 		let timeout = min(600, max(1, number(["asrTimeout", "timeout"], "SPEEK_ASR_TIMEOUT", default: 600)))
+		#if arch(arm64)
+		let defaultBackend = "qwen-mlx"
+		#else
+		let defaultBackend = "faster-whisper"
+		#endif
+		let backend = value(["asrBackend"], "SPEEK_ASR_BACKEND", default: defaultBackend)
 
 		return AgentConfig(
 			asrAPIURL: value(["asrApiUrl", "asr_api_url"], "SPEEK_ASR_API_URL", default: "http://127.0.0.1:8000/v1/audio/transcriptions"),
-			asrModel: value(["asrModel", "asr_model"], "SPEEK_ASR_MODEL", default: "whisper-large-v3-turbo"),
+			asrBackend: backend,
+			asrStreaming: boolean(["asrStreaming"], "SPEEK_ASR_STREAMING", default: true),
+			asrModel: value(["asrModel", "asr_model"], "SPEEK_ASR_MODEL",
+				default: backend == "qwen-mlx" ? "mlx-community/Qwen3-ASR-0.6B-4bit" : "whisper-large-v3-turbo"),
 			asrLanguage: value(["asrLanguage", "asr_language"], "SPEEK_ASR_LANGUAGE", default: ""),
 			asrPrompt: value(["asrPrompt", "asr_prompt"], "SPEEK_ASR_PROMPT", default: ""),
 			asrAPIKey: apiKey,
@@ -449,7 +460,7 @@ private final class StateFiles: @unchecked Sendable {
 				try? FileManager.default.removeItem(at: recording)
 			}
 		}
-		for staleName in ["session_id", "wav_path", "transcript", "transcript_ready"] {
+		for staleName in ["session_id", "wav_path", "transcript", "transcript_ready", "live_transcript"] {
 			try? FileManager.default.removeItem(at: directory.appendingPathComponent(staleName))
 		}
 	}
@@ -526,6 +537,7 @@ private final class NativeRecorder: @unchecked Sendable {
 	private let outputURL: URL
 	private let targetSampleRate: Double
 	private let stateFiles: StateFiles
+	private let onAudio: ((Data) -> Void)?
 	private let lock = NSLock()
 	private var pcm = Data()
 	private var inputSampleRate = 0.0
@@ -538,10 +550,11 @@ private final class NativeRecorder: @unchecked Sendable {
 	private(set) var deviceName = "Default microphone"
 	private var tapInstalled = false
 
-	init(outputURL: URL, targetSampleRate: Double, stateFiles: StateFiles) {
+	init(outputURL: URL, targetSampleRate: Double, stateFiles: StateFiles, onAudio: ((Data) -> Void)? = nil) {
 		self.outputURL = outputURL
 		self.targetSampleRate = targetSampleRate
 		self.stateFiles = stateFiles
+		self.onAudio = onAudio
 	}
 
 	func start(deviceName requestedName: String, deviceIndex requestedIndex: String) throws {
@@ -647,7 +660,10 @@ private final class NativeRecorder: @unchecked Sendable {
 			resamplePosition += ratio
 		}
 		resamplePosition -= Double(frameCount)
-		encoded.withUnsafeBytes { pcm.append(contentsOf: $0) }
+		let chunk = encoded.withUnsafeBytes { Data($0) }
+		pcm.append(chunk)
+		// Enqueue before unlocking so stop() cannot overtake the final audio callback.
+		onAudio?(chunk)
 
 		let now = ProcessInfo.processInfo.systemUptime
 		var levelUpdate: (Double, Double, [Double])?
@@ -870,6 +886,161 @@ private enum NativeTranscriber {
 	}
 }
 
+// Audio and requests are serialized independently of the capture and agent queues.
+// Drafts replace the previous text; only a final response is eligible for delivery.
+private final class NativeStreamingTranscriber: @unchecked Sendable {
+	private let queue = DispatchQueue(label: "com.speek.coding.streaming", qos: .userInitiated)
+	private let endpoint: URL
+	private let config: AgentConfig
+	private let partial: (String) -> Void
+	private var pending = Data()
+	private var identifier: String?
+	private var sequence = 0
+	private var lastDraft = ""
+	private var task: URLSessionDataTask?
+	private var busy = false
+	private var finishing = false
+	private var canceled = false
+	private var outcome: Result<String, Error>?
+	private var completion: ((Result<String, Error>) -> Void)?
+
+	init?(config: AgentConfig, partial: @escaping (String) -> Void) {
+		guard config.asrBackend == "qwen-mlx", config.asrStreaming,
+			config.fakeTranscript.isEmpty, config.audioSampleRate == 16_000,
+			let url = URL(string: config.asrAPIURL), isLoopbackHost(url.host),
+			["http", "https"].contains(url.scheme?.lowercased() ?? ""),
+			url.user == nil, url.password == nil,
+			var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+		else { return nil }
+		components.path = "/v1/audio/streams"
+		components.query = nil
+		components.fragment = nil
+		guard let endpoint = components.url else { return nil }
+		self.endpoint = endpoint
+		self.config = config
+		self.partial = partial
+		queue.async { self.pump() }
+	}
+
+	func append(_ data: Data) {
+		queue.async {
+			guard !self.canceled, self.outcome == nil, !self.finishing else { return }
+			guard self.pending.count + data.count <= 9_600_000 else {
+				self.fail(failure("STREAM_BUFFER_FULL", "Live transcription could not keep up with recording."))
+				return
+			}
+			self.pending.append(data)
+			self.pump()
+		}
+	}
+
+	func finish(completion: @escaping (Result<String, Error>) -> Void) {
+		queue.async {
+			self.completion = completion
+			self.finishing = true
+			if let outcome = self.outcome { self.resolve(outcome) }
+			else if self.canceled { self.resolve(.failure(failure("CANCELED", "Live transcription canceled."))) }
+			else { self.pump() }
+		}
+	}
+
+	func cancel() {
+		queue.async {
+			guard !self.canceled else { return }
+			self.canceled = true
+			self.task?.cancel()
+			self.task = nil
+			self.pending.removeAll()
+			if let identifier = self.identifier { self.release(identifier) }
+			self.resolve(.failure(failure("CANCELED", "Live transcription canceled.")))
+		}
+	}
+
+	private func release(_ identifier: String) {
+		var request = URLRequest(url: endpoint.appendingPathComponent(identifier).appendingPathComponent("cancel"), timeoutInterval: 10)
+		request.httpMethod = "POST"
+		request.httpBody = Data([0])
+		request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
+		URLSession.shared.dataTask(with: request).resume()
+	}
+
+	private func resolve(_ result: Result<String, Error>) {
+		outcome = result
+		let callback = completion
+		completion = nil
+		callback?(result)
+	}
+
+	private func fail(_ error: Error) {
+		pending.removeAll()
+		if let identifier { release(identifier) }
+		resolve(.failure(error))
+	}
+
+	private func pump() {
+		guard !busy, !canceled, outcome == nil else { return }
+		if identifier == nil {
+			let options: JSONObject = ["model": config.asrModel, "language": config.asrLanguage,
+				"prompt": config.asrPrompt, "sample_rate": 16000]
+			guard let body = try? JSONSerialization.data(withJSONObject: options) else { return }
+			send(url: endpoint, body: body, starting: true, final: false)
+		} else if pending.count >= 6400 || (finishing && !pending.isEmpty) {
+			let body = Data(pending.prefix(32000))
+			pending.removeFirst(body.count)
+			send(url: endpoint.appendingPathComponent(identifier!).appendingPathComponent("append"), body: body, starting: false, final: false)
+		} else if finishing {
+			send(url: endpoint.appendingPathComponent(identifier!).appendingPathComponent("finish"), body: Data([0]), starting: false, final: true)
+		}
+	}
+
+	private func send(url: URL, body: Data, starting: Bool, final: Bool) {
+		busy = true
+		var request = URLRequest(url: url, timeoutInterval: starting ? config.asrTimeout : 30)
+		request.httpMethod = "POST"
+		request.httpBody = body
+		request.setValue(starting ? "application/json" : "application/octet-stream", forHTTPHeaderField: "Content-Type")
+		request.setValue(String(sequence), forHTTPHeaderField: "X-Speek-Sequence")
+		task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+			guard let self else { return }
+			self.queue.async {
+				self.busy = false
+				self.task = nil
+				let object = data.flatMap { try? JSONSerialization.jsonObject(with: $0) as? JSONObject }
+				if self.canceled {
+					if starting, let id = object?["id"] as? String { self.release(id) }
+					return
+				}
+				if let error { self.fail(error); return }
+				guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode),
+					let object, let text = object["text"] as? String
+				else {
+					self.fail(failure("STREAM_REQUEST_FAILED", "Live transcription service is unavailable."))
+					return
+				}
+				if starting {
+					guard let id = object["id"] as? String, id.count == 32, id.allSatisfy({ $0.isHexDigit }) else {
+						self.fail(failure("STREAM_INVALID_SESSION", "Invalid live transcription session.")); return
+					}
+					self.identifier = id
+				} else { self.sequence += 1 }
+				if final {
+					guard object["is_final"] as? Bool == true else {
+						self.fail(failure("STREAM_NOT_FINAL", "The service did not finalize the transcript.")); return
+					}
+					self.resolve(.success(text.trimmingCharacters(in: .whitespacesAndNewlines)))
+				} else {
+					if !text.isEmpty, text != self.lastDraft {
+						self.lastDraft = text
+						self.partial(text)
+					}
+					self.pump()
+				}
+			}
+		}
+		task?.resume()
+	}
+}
+
 private enum NativeDelivery {
 	static func deliver(text: String, mode: String, targetProcessIdentifier: pid_t?) throws -> JSONObject {
 		guard !text.isEmpty else { throw failure("EMPTY_TRANSCRIPT", "The transcript is empty.") }
@@ -946,6 +1117,7 @@ private final class SpeekAgent: @unchecked Sendable {
 	private var wavURL: URL?
 	private var recorder: NativeRecorder?
 	private var asrTask: URLSessionDataTask?
+	private var streamingTranscriber: NativeStreamingTranscriber?
 	private var pendingStartCompletion: AgentCompletion?
 	private var pendingTestCompletion: AgentCompletion?
 	private var hudProcess: Process?
@@ -985,6 +1157,8 @@ private final class SpeekAgent: @unchecked Sendable {
 			if let process = hudProcess, process.isRunning { process.terminate() }
 			hudProcess = nil
 			asrTask?.cancel()
+			streamingTranscriber?.cancel()
+			streamingTranscriber = nil
 			_ = try? recorder?.stop()
 			recorder = nil
 			if let wavURL { try? FileManager.default.removeItem(at: wavURL) }
@@ -1173,7 +1347,16 @@ private final class SpeekAgent: @unchecked Sendable {
 					return
 				}
 				do {
-					let newRecorder = NativeRecorder(outputURL: output, targetSampleRate: config.audioSampleRate, stateFiles: files)
+					let stream = testDuration == nil ? NativeStreamingTranscriber(config: config) { [weak self] text in
+						self?.queue.async {
+							guard let self, self.sessionID == identifier,
+								self.state == .recording || self.state == .transcribing else { return }
+							self.files.write("live_transcript", text)
+						}
+					} : nil
+					streamingTranscriber = stream
+					let newRecorder = NativeRecorder(outputURL: output, targetSampleRate: config.audioSampleRate, stateFiles: files,
+						onAudio: { [weak stream] audio in stream?.append(audio) })
 					try newRecorder.start(deviceName: config.audioInputDeviceName, deviceIndex: config.audioInputDeviceIndex)
 					recorder = newRecorder
 					files.write("session_id", identifier)
@@ -1188,6 +1371,7 @@ private final class SpeekAgent: @unchecked Sendable {
 						queue.asyncAfter(deadline: .now() + duration) { [self] in finishTestRecording(identifier: identifier, duration: duration, command: command) }
 					} else {
 						state = .recording
+						if stream != nil { pollModelPhase(config: config, identifier: identifier) }
 						queue.asyncAfter(deadline: .now() + 300) { [weak self] in
 							guard let self, self.state == .recording, self.sessionID == identifier else { return }
 							self.handleCancel(command: "cancel") { _ in }
@@ -1270,7 +1454,7 @@ private final class SpeekAgent: @unchecked Sendable {
 				return
 			}
 
-			asrTask = NativeTranscriber.transcribe(wavURL: recording.url, config: config) { [weak self] result in
+			let receive: (Result<String, Error>) -> Void = { [weak self] result in
 				self?.queue.async {
 					guard let self else { return }
 					guard self.state == .transcribing, self.sessionID == identifier else {
@@ -1296,7 +1480,30 @@ private final class SpeekAgent: @unchecked Sendable {
 					}
 				}
 			}
-			pollModelPhase(config: config, identifier: identifier)
+			if let stream = streamingTranscriber {
+				stream.finish { [weak self] result in
+					self?.queue.async {
+						guard let self else { return }
+						guard self.state == .transcribing, self.sessionID == identifier else {
+							receive(.failure(failure("CANCELED", "The transcription was canceled.")))
+							return
+						}
+						switch result {
+						case .success: receive(result)
+						case .failure:
+							// The local recording remains available if streaming disconnects.
+							stream.cancel()
+							self.streamingTranscriber = nil
+							self.files.remove(["live_transcript"])
+							self.asrTask = NativeTranscriber.transcribe(wavURL: recording.url, config: config, completion: receive)
+							self.pollModelPhase(config: config, identifier: identifier)
+						}
+					}
+				}
+			} else {
+				asrTask = NativeTranscriber.transcribe(wavURL: recording.url, config: config, completion: receive)
+				pollModelPhase(config: config, identifier: identifier)
+			}
 		} catch {
 			self.recorder = nil
 			state = .idle
@@ -1317,14 +1524,18 @@ private final class SpeekAgent: @unchecked Sendable {
 			let object = data.flatMap { try? JSONSerialization.jsonObject(with: $0) as? JSONObject }
 			let phase = object?["model_phase"] as? String
 			self?.queue.async {
-				guard let self, self.state == .transcribing, self.sessionID == identifier else { return }
+				guard let self, self.sessionID == identifier,
+					self.state == .transcribing || self.state == .recording else { return }
 				switch phase {
 				case "downloading": self.files.updateHUD(status: "downloading", detail: "Press Fn to cancel")
 				case "loading": self.files.updateHUD(status: "loading", detail: "Press Fn to cancel")
-				default: self.files.updateHUD(status: "transcribing", detail: "Press Fn to cancel")
+				default:
+					self.files.updateHUD(status: self.state == .recording ? "recording" : "transcribing",
+						detail: self.state == .recording ? (self.recorder?.deviceName ?? "Listening") : "Finalizing text")
 				}
 				self.queue.asyncAfter(deadline: .now() + 1) { [weak self] in
-					guard let self, self.state == .transcribing, self.sessionID == identifier else { return }
+					guard let self, self.sessionID == identifier,
+						self.state == .transcribing || self.state == .recording else { return }
 					self.pollModelPhase(config: config, identifier: identifier)
 				}
 			}
@@ -1412,6 +1623,8 @@ private final class SpeekAgent: @unchecked Sendable {
 	}
 
 	private func clearSession(preserveRecording: Bool = false) {
+		streamingTranscriber?.cancel()
+		streamingTranscriber = nil
 		let recordingURL = wavURL
 		sessionID = nil
 		wavURL = nil
@@ -1419,7 +1632,7 @@ private final class SpeekAgent: @unchecked Sendable {
 		if !preserveRecording, let recordingURL {
 			try? FileManager.default.removeItem(at: recordingURL)
 		}
-		files.remove(["session_id", "wav_path", "pending_confirm", "transcript", "transcript_ready"])
+		files.remove(["session_id", "wav_path", "pending_confirm", "transcript", "transcript_ready", "live_transcript"])
 	}
 
 	private func captureFrontmostProcessIdentifier() -> pid_t? {
@@ -2093,6 +2306,63 @@ private func runMenuLocalizationSelfTest() {
 	defaults.set(MenuLanguage.system.rawValue, forKey: MenuLanguage.defaultsKey)
 	precondition(MenuLanguage.selected(in: defaults) == .system)
 	print("Menu localization self-test passed (3 languages, system matching, saved preference, and format placeholders).")
+}
+
+// Replays an existing WAV through the exact native client without microphone,
+// clipboard, Accessibility permissions, or application UI side effects.
+private func runStreamingSelfTest() throws {
+	let arguments = CommandLine.arguments
+	guard arguments.count >= 5 else { throw failure("TEST_ARGUMENTS", "Expected endpoint, model, and PCM16 WAV path.") }
+	let config = AgentConfig.load(overrides: ["asrApiUrl": arguments[2], "asrModel": arguments[3],
+		"asrBackend": "qwen-mlx", "asrStreaming": true, "asrPrompt": "", "asrLanguage": "",
+		"fakeTranscript": "", "audioSampleRate": 16000])
+	let file = try AVAudioFile(forReading: URL(fileURLWithPath: arguments[4]), commonFormat: .pcmFormatInt16, interleaved: true)
+	guard file.processingFormat.sampleRate == 16000, file.processingFormat.channelCount == 1 else {
+		throw failure("TEST_AUDIO", "Expected 16000 Hz mono WAV.")
+	}
+	let buffer = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: AVAudioFrameCount(file.length))!
+	try file.read(into: buffer)
+	let pcm = Data(bytes: buffer.int16ChannelData![0], count: Int(buffer.frameLength) * 2)
+	let done = DispatchSemaphore(value: 0)
+	let cancel = arguments.contains("--cancel")
+	var resultWasExpected = false
+	let start = ProcessInfo.processInfo.systemUptime
+	guard let stream = NativeStreamingTranscriber(config: config, partial: { text in
+		let event: JSONObject = ["partial": text, "elapsed": ProcessInfo.processInfo.systemUptime - start]
+		if let data = try? JSONSerialization.data(withJSONObject: event) {
+			FileHandle.standardOutput.write(data + Data([10]))
+		}
+	}) else { throw failure("TEST_STREAM", "Streaming configuration was rejected.") }
+	for offset in stride(from: 0, to: pcm.count, by: 6400) {
+		let end = min(pcm.count, offset + 6400)
+		Thread.sleep(forTimeInterval: max(0, start + Double(end) / 32000 - ProcessInfo.processInfo.systemUptime))
+		stream.append(pcm.subdata(in: offset..<end))
+		if cancel, end >= 32000 { stream.cancel(); break }
+	}
+	let stopped = ProcessInfo.processInfo.systemUptime
+	stream.finish { result in
+		var event: JSONObject = ["tailSeconds": ProcessInfo.processInfo.systemUptime - stopped]
+		switch result {
+		case .success(let text): event["final"] = text; resultWasExpected = !cancel
+		case .failure(let error):
+			event["error"] = error.localizedDescription
+			resultWasExpected = cancel && (error as? AgentFailure)?.code == "CANCELED"
+		}
+		event["ok"] = resultWasExpected
+		if let data = try? JSONSerialization.data(withJSONObject: event) { FileHandle.standardOutput.write(data + Data([10])) }
+		done.signal()
+	}
+	guard done.wait(timeout: .now() + 120) == .success else {
+		stream.cancel()
+		throw failure("TEST_TIMEOUT", "Streaming replay did not finish.")
+	}
+	Thread.sleep(forTimeInterval: 0.2) // Let the cancellation cleanup request leave the process.
+	guard resultWasExpected else { throw failure("TEST_FAILED", "Unexpected streaming replay result.") }
+}
+
+if CommandLine.arguments.contains("--streaming-self-test") {
+	do { try runStreamingSelfTest(); exit(EXIT_SUCCESS) }
+	catch { FileHandle.standardError.write(Data("\(error)\n".utf8)); exit(EXIT_FAILURE) }
 }
 
 if CommandLine.arguments.contains("--localization-self-test") {

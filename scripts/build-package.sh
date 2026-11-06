@@ -26,6 +26,7 @@ VERSION="$(/usr/bin/awk -F '"' '/"version"/ { print $4; exit }' package.json)"
 
 case "$TARGET_ARCH" in
 arm64)
+	MACOS_TARGET="${SPEEK_MACOS_TARGET:-14.0}"
 	NODE_ARCH="arm64"
 	NODE_SHA256="ef28d8fab2c0e4314522d4bb1b7173270aa3937e93b92cb7de79c112ac1fa953"
 	PYTHON_ARCH="aarch64"
@@ -136,6 +137,10 @@ fi
 BUNDLED_PYTHON="$RUNTIME/python/bin/python3"
 PYTHON_SITE_PACKAGES="$(PATH=/usr/bin:/bin "$BUNDLED_PYTHON" -c 'import sysconfig; print(sysconfig.get_path("purelib"))')"
 PIP_PLATFORM="macosx_${MACOS_TARGET/./_}_$TARGET_ARCH"
+ASR_REQUIREMENTS="packaging/requirements-asr.txt"
+if [ "$TARGET_ARCH" = "arm64" ]; then
+	ASR_REQUIREMENTS="packaging/requirements-mlx.txt"
+fi
 PATH=/usr/bin:/bin "$BUNDLED_PYTHON" -m pip install \
 	--disable-pip-version-check \
 	--break-system-packages \
@@ -146,7 +151,7 @@ PATH=/usr/bin:/bin "$BUNDLED_PYTHON" -m pip install \
 	--platform "$PIP_PLATFORM" \
 	--target "$PYTHON_SITE_PACKAGES" \
 	--upgrade \
-	--requirement packaging/requirements-asr.txt
+	--requirement "$ASR_REQUIREMENTS"
 /usr/bin/find "$RUNTIME/python" -type d -name __pycache__ -prune -exec /bin/rm -rf {} +
 
 /bin/cp app/Info.plist "$CONTENTS/Info.plist"

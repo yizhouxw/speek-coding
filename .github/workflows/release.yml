@@ -46,6 +46,7 @@ jobs:
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npm run check
       - run: uvx pip-audit --no-deps --disable-pip --requirement packaging/requirements-asr.txt
+      - run: uvx pip-audit --no-deps --disable-pip --requirement packaging/requirements-mlx.txt
 
   build:
     needs: validate

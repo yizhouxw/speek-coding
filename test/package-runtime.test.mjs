@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
-import { installAsrRuntime } from '../cli/lib/actions.mjs';
+import { installAsrRuntime, DEFAULT_CONFIG } from '../cli/lib/actions.mjs';
 import { createRuntime } from '../cli/lib/runtime.mjs';
 
 test('packaged runtime resolves App-owned Node-adjacent resources', () => {
@@ -43,7 +43,7 @@ test('ASR installation reuses a bundled Python runtime without creating a venv',
 	});
 
 	assert.equal(result.pythonBin, '/usr/bin/true');
-	assert.equal(result.package, 'bundled faster-whisper');
+	assert.equal(result.package, DEFAULT_CONFIG.asrBackend === 'qwen-mlx' ? 'bundled Qwen3-ASR / MLX' : 'bundled faster-whisper');
 	assert.equal(await fs.readFile(targetPath, 'utf-8'), 'print("test")\n');
 	await assert.rejects(fs.access(path.join(tempDir, 'venv')));
 });

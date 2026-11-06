@@ -4,6 +4,9 @@ Public releases follow [Semantic Versioning](https://semver.org/). Version numbe
 
 ## [Unreleased]
 
+- Default Apple Silicon installations to local Qwen3-ASR-0.6B 4-bit / MLX, with live, revisable HUD transcription and final text delivery after stopping. Apple Silicon packages now require macOS 14; Intel keeps Whisper and macOS 13 support.
+- Add ordered, bounded local PCM sessions, cancellation and file-transcription recovery, and bundle pinned MLX dependencies. Existing installations retain their engine until explicitly switched.
+
 - Identify SpeekCoding's project author as yizhouxw in package metadata and copyright notices, while retaining the upstream John Yin copyright notice and clarifying attribution.
 
 ## [0.1.1] - 2026-11-04

@@ -43,3 +43,5 @@ jobs:
 
       - name: Audit Python runtime dependencies
         run: uvx pip-audit --no-deps --disable-pip --requirement packaging/requirements-asr.txt
+      - name: Audit MLX runtime dependencies
+        run: uvx pip-audit --no-deps --disable-pip --requirement packaging/requirements-mlx.txt

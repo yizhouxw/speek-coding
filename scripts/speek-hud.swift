@@ -179,7 +179,7 @@ final class HudController: NSObject, NSApplicationDelegate {
 
 		detailLabel.textColor = NSColor.white.withAlphaComponent(0.62)
 		detailLabel.backgroundColor = .clear
-		detailLabel.lineBreakMode = .byTruncatingTail
+		detailLabel.lineBreakMode = .byTruncatingHead
 
 		timeLabel.textColor = .white
 		timeLabel.alignment = .right
@@ -363,6 +363,7 @@ final class HudController: NSObject, NSApplicationDelegate {
 
 		cancelButton.isHidden = !["recording", "transcribing", "downloading", "loading"].contains(status)
 		let detail = state("hud_detail")
+		let liveText = state("live_transcript")
 		let startedAt = epoch("hud_started_at") ?? Date().timeIntervalSince1970
 		let expiresAt = epoch("hud_expires_at")
 
@@ -370,14 +371,14 @@ final class HudController: NSObject, NSApplicationDelegate {
 		case "recording":
 			dot.color = .systemRed
 			titleLabel.stringValue = "Listening"
-			detailLabel.stringValue = detail.isEmpty ? "Microphone" : detail
+			detailLabel.stringValue = liveText.isEmpty ? (detail.isEmpty ? "Microphone" : detail) : liveText
 			timeLabel.stringValue = elapsedText(from: startedAt)
 			levelMeter.isHidden = false
 			levelMeter.levels = waveformLevels()
 		case "transcribing":
 			dot.color = .systemBlue
 			titleLabel.stringValue = "Transcribing"
-			detailLabel.stringValue = detail.isEmpty ? "Processing audio" : detail
+			detailLabel.stringValue = liveText.isEmpty ? (detail.isEmpty ? "Finalizing text" : detail) : liveText
 			timeLabel.stringValue = elapsedText(from: startedAt)
 			levelMeter.isHidden = true
 		case "downloading", "loading":
