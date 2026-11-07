@@ -74,6 +74,67 @@ class StreamingTests(unittest.TestCase):
         self.assertEqual(caught.exception.code, code)
         caught.exception.close()
 
+    def test_prepare_reports_readiness_and_rejects_browser_origins(self):
+        url = self.url.replace("/streams", "/prepare")
+        request = urllib.request.Request(url, data=b"", method="POST")
+        with self.opener.open(request, timeout=5) as response:
+            self.assertTrue(json.load(response)["model_ready"])
+        request.add_header("Origin", "https://example.com")
+        with self.assertRaises(urllib.error.HTTPError) as caught:
+            self.opener.open(request, timeout=5)
+        self.assertEqual(caught.exception.code, 403)
+        caught.exception.close()
+        # Initialization executes on the same owner thread as inference.
+        self.engine.session = None
+        owner = []
+        def load(disconnected):
+            owner.append(threading.get_ident())
+            self.engine.session = self.fake
+            return self.fake
+        self.engine.get = load
+        request = urllib.request.Request(url, data=b"", method="POST")
+        with self.opener.open(request, timeout=5) as response:
+            self.assertTrue(json.load(response)["model_ready"])
+        self.assertNotEqual(owner[0], threading.get_ident())
+
+    def test_cpp_preparation_is_once_per_service_and_retries_failures(self):
+        args = types.SimpleNamespace(backend="whisper-cpp", model="test.bin", quiet=True,
+                                     max_request_bytes=1024)
+        cache = asr.ModelCache("cpu", "int8", 0)
+        server = asr.ThreadingHTTPServer(("127.0.0.1", 0), asr.make_handler(args, cache))
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        base = f"http://127.0.0.1:{server.server_port}"
+        def ready():
+            with self.opener.open(base + "/health") as response:
+                return json.load(response)["model_ready"]
+        def prepare():
+            with self.opener.open(urllib.request.Request(base + "/v1/audio/prepare", data=b"")) as response:
+                return json.load(response)
+        try:
+            self.assertFalse(ready())
+            with patch.object(asr, "transcribe_whisper_cpp", side_effect=RuntimeError("load failed")):
+                with self.assertRaises(urllib.error.HTTPError) as caught:
+                    prepare()
+                self.assertEqual(caught.exception.code, 503)
+                caught.exception.close()
+            self.assertFalse(ready())
+            self.assertEqual(cache.phase, "idle")
+            def warm(args, path, *unused):
+                self.assertEqual(cache.phase, "loading")
+                with wave.open(str(path)) as audio:
+                    self.assertEqual(audio.getnframes(), 16000)
+                return "", None, None
+            with patch.object(asr, "transcribe_whisper_cpp", side_effect=warm) as inference:
+                self.assertTrue(prepare()["model_ready"])
+                self.assertTrue(ready())
+                prepare()
+                self.assertEqual(inference.call_count, 1)
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join()
+
     def test_revisions_final_tail_and_single_thread_ownership(self):
         session = self.post(body=json.dumps({"language": "zh"}).encode())["id"]
         suffix = f"/{session}"

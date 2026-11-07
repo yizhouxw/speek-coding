@@ -4,6 +4,8 @@ Public releases follow [Semantic Versioning](https://semver.org/). Version numbe
 
 ## [Unreleased]
 
+- Prepare local transcription models before opening the microphone, show initialization progress, and allow Fn/HUD cancellation. Failed initialization leaves recording stopped and can be retried.
+
 ## [0.2.0] - 2026-11-06
 
 - Add a localized License menu and a resizable, selectable, scrollable license window with OK, Close, Return, Escape, and window-close controls.

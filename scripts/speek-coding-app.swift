@@ -1268,7 +1268,7 @@ private final class SpeekAgent: @unchecked Sendable {
 		switch state {
 		case .idle: handleSave(request, command: command, completion: completion)
 		case .recording: handleWatch(request, command: command, completion: completion)
-		case .transcribing: handleCancel(command: command, completion: completion)
+		case .starting, .transcribing: handleCancel(command: command, completion: completion)
 		default:
 			completion(errorResponse(command: command, error: failure("AGENT_BUSY", "SpeekCoding is currently \(state.rawValue)."), state: state.rawValue))
 		}
@@ -1297,13 +1297,73 @@ private final class SpeekAgent: @unchecked Sendable {
 			return
 		}
 		pendingStartCompletion = completion
-		startWhenMicrophoneAuthorized(
-			identifier: identifier,
-			config: config,
-			output: output,
-			command: command,
-			testDuration: nil
-		)
+		prepareBeforeRecording(identifier: identifier, config: config, output: output, command: command)
+	}
+
+	private func prepareBeforeRecording(identifier: String, config: AgentConfig, output: URL, command: String) {
+		// External compatible APIs own their readiness protocol. Fake transcripts
+		// and test recordings do not require a transcription model.
+		guard config.fakeTranscript.isEmpty, let endpoint = URL(string: config.asrAPIURL),
+			isLoopbackHost(endpoint.host), endpoint.path == "/v1/audio/transcriptions",
+			var components = URLComponents(url: endpoint, resolvingAgainstBaseURL: false) else {
+			startWhenMicrophoneAuthorized(identifier: identifier, config: config, output: output, command: command, testDuration: nil)
+			return
+		}
+		components.path = "/v1/audio/prepare"
+		components.query = nil
+		guard let url = components.url else { return }
+		func completePreparation(_ data: Data?, _ response: URLResponse?, _ error: Error?) {
+			queue.async { [self] in
+				guard state == .starting, sessionID == identifier else { return }
+				asrTask = nil
+				let object = data.flatMap { try? JSONSerialization.jsonObject(with: $0) as? JSONObject }
+				guard error == nil, (response as? HTTPURLResponse)?.statusCode == 200,
+					object?["model_ready"] as? Bool == true else {
+					state = .idle
+					let detail = error?.localizedDescription ?? (object?["error"] as? String) ?? "Local ASR is unavailable. Restart SpeekCoding's transcription service."
+					files.updateHUD(status: "error", detail: "Model initialization failed: \(detail)")
+					launchHUDIfNeeded(config)
+					let callback = pendingStartCompletion
+					pendingStartCompletion = nil
+					clearSession()
+					callback?(errorResponse(command: command, error: failure("MODEL_INITIALIZATION_FAILED", detail), state: state.rawValue))
+					return
+				}
+				startWhenMicrophoneAuthorized(identifier: identifier, config: config, output: output, command: command, testDuration: nil)
+			}
+		}
+		components.path = "/health"
+		guard let healthURL = components.url else { return }
+		var healthRequest = URLRequest(url: healthURL)
+		healthRequest.timeoutInterval = 10
+		asrTask = URLSession.shared.dataTask(with: healthRequest) { [weak self] data, response, error in
+			self?.queue.async {
+				guard let self, self.state == .starting, self.sessionID == identifier else { return }
+				let object = data.flatMap { try? JSONSerialization.jsonObject(with: $0) as? JSONObject }
+				let status = (response as? HTTPURLResponse)?.statusCode
+				// Other local OpenAI-compatible services need not implement Speek's protocol.
+				if error == nil, status == 404 || (status == 200 && object?["model_ready"] == nil) {
+					self.asrTask = nil
+					self.startWhenMicrophoneAuthorized(identifier: identifier, config: config, output: output, command: command, testDuration: nil)
+					return
+				}
+				if error != nil || status != 200 || object?["model_ready"] as? Bool == true {
+					completePreparation(data, response, error)
+					return
+				}
+				self.files.write("session_id", identifier)
+				self.files.write("hud_started_at", String(Date().timeIntervalSince1970))
+				self.files.updateHUD(status: "loading", detail: "Initializing model — microphone off. Press Fn to cancel")
+				self.launchHUDIfNeeded(config)
+				self.pollModelPhase(config: config, identifier: identifier, preparingOnly: true)
+				var request = URLRequest(url: url)
+				request.httpMethod = "POST"
+				request.timeoutInterval = 600
+				self.asrTask = URLSession.shared.dataTask(with: request, completionHandler: completePreparation)
+				self.asrTask?.resume()
+			}
+		}
+		asrTask?.resume()
 	}
 
 	private func handleTestRecord(_ request: JSONObject, command: String, completion: @escaping AgentCompletion) {
@@ -1523,7 +1583,7 @@ private final class SpeekAgent: @unchecked Sendable {
 		}
 	}
 
-	private func pollModelPhase(config: AgentConfig, identifier: String) {
+	private func pollModelPhase(config: AgentConfig, identifier: String, preparingOnly: Bool = false) {
 		guard config.fakeTranscript.isEmpty, let endpoint = URL(string: config.asrAPIURL),
 			isLoopbackHost(endpoint.host), var components = URLComponents(url: endpoint, resolvingAgainstBaseURL: false)
 		else { return }
@@ -1534,19 +1594,20 @@ private final class SpeekAgent: @unchecked Sendable {
 			let object = data.flatMap { try? JSONSerialization.jsonObject(with: $0) as? JSONObject }
 			let phase = object?["model_phase"] as? String
 			self?.queue.async {
-				guard let self, self.sessionID == identifier,
-					self.state == .transcribing || self.state == .recording else { return }
+				guard let self, self.sessionID == identifier, !preparingOnly || self.state == .starting,
+					self.state == .starting || self.state == .transcribing || self.state == .recording else { return }
 				switch phase {
 				case "downloading": self.files.updateHUD(status: "downloading", detail: "Press Fn to cancel")
-				case "loading": self.files.updateHUD(status: "loading", detail: "Press Fn to cancel")
+				case "loading": self.files.updateHUD(status: "loading", detail: self.state == .starting ? "Initializing model — microphone off. Press Fn to cancel" : "Press Fn to cancel")
 				default:
+					if self.state == .starting { break }
 					self.files.updateHUD(status: self.state == .recording ? "recording" : "transcribing",
 						detail: self.state == .recording ? (self.recorder?.deviceName ?? "Listening") : "Finalizing text")
 				}
 				self.queue.asyncAfter(deadline: .now() + 1) { [weak self] in
-					guard let self, self.sessionID == identifier,
-						self.state == .transcribing || self.state == .recording else { return }
-					self.pollModelPhase(config: config, identifier: identifier)
+					guard let self, self.sessionID == identifier, !preparingOnly || self.state == .starting,
+						self.state == .starting || self.state == .transcribing || self.state == .recording else { return }
+					self.pollModelPhase(config: config, identifier: identifier, preparingOnly: preparingOnly)
 				}
 			}
 		}.resume()

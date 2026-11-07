@@ -89,3 +89,5 @@ Source development requires macOS, Node.js 20.12+, Python 3.12, and Xcode Comman
 [MIT](LICENSE). Project author: [yizhouxw](https://github.com/yizhouxw). The hardware-trigger workflow originated from [Johnixr/dji-mic-dictation](https://github.com/Johnixr/dji-mic-dictation); the upstream John Yin copyright notice is retained. [Third-party notices](packaging/THIRD_PARTY_NOTICES.md).
 
 SpeekCoding is not affiliated with or endorsed by Apple, DJI, Karabiner-Elements, OpenAI, or model providers.
+
+When the local model is not ready, pressing the recording key shows model initialization before the microphone opens. Recording starts once initialization succeeds; press Fn or the HUD cancel button to cancel. whisper.cpp performs a silent warm-up once per service session to prime system caches; its CLI still loads model weights for each transcription.

@@ -466,6 +466,37 @@ def request_content_length(handler: BaseHTTPRequestHandler, max_bytes: int) -> i
 
 
 def make_handler(args: argparse.Namespace, cache: ModelCache):
+    prepare_lock = threading.Lock()
+    cpp_ready = False
+
+    def prepare(disconnected):
+        nonlocal cpp_ready
+        if args.backend == "qwen-mlx":
+            cache.run(cache.get, disconnected)
+        elif args.backend == "faster-whisper":
+            cache.get(args.model, disconnected)
+        else:
+            # whisper-cli reloads weights for each request. A real silent inference
+            # primes Core ML/OS caches; readiness lasts for this service instance.
+            with prepare_lock:
+                if cpp_ready:
+                    return
+                cache.phase = "loading"
+                try:
+                    with tempfile.TemporaryDirectory(prefix="speek-warmup-") as directory:
+                        audio = Path(directory) / "silence.wav"
+                        with wave.open(str(audio), "wb") as wav:
+                            wav.setnchannels(1)
+                            wav.setsampwidth(2)
+                            wav.setframerate(16000)
+                            wav.writeframes(b"\0" * 32000)
+                        if disconnected():
+                            raise ConnectionAbortedError("Initialization canceled")
+                        transcribe_whisper_cpp(args, audio, args.model, None, None)
+                        cpp_ready = True
+                finally:
+                    cache.phase = "idle"
+
     class Handler(BaseHTTPRequestHandler):
         server_version = "speek-local-asr/0.2"
 
@@ -492,7 +523,8 @@ def make_handler(args: argparse.Namespace, cache: ModelCache):
                         "model": normalize_model_name(args.model),
                         "model_phase": cache.phase,
                         "streaming": args.backend == "qwen-mlx",
-                        "model_ready": cache.session is not None if isinstance(cache, QwenEngine) else cache._model is not None,
+                        "model_ready": (cache.session is not None if isinstance(cache, QwenEngine)
+                                        else cpp_ready if args.backend == "whisper-cpp" else cache._model is not None),
                     },
                 )
                 return
@@ -563,6 +595,21 @@ def make_handler(args: argparse.Namespace, cache: ModelCache):
 
         def do_POST(self) -> None:
             path = urlparse(self.path).path
+            if path == "/v1/audio/prepare":
+                try:
+                    if self.headers.get("Origin") is not None:
+                        raise ClientRequestError(403, "browser-origin preparation is not allowed")
+                    if self.headers.get("Content-Length", "0") != "0" or self.headers.get("Transfer-Encoding"):
+                        raise ClientRequestError(400, "preparation does not accept a request body")
+                    prepare(self.client_disconnected)
+                    json_response(self, 200, {"ok": True, "model_ready": True})
+                except (ConnectionAbortedError, BrokenPipeError, ConnectionResetError):
+                    return
+                except ClientRequestError as exc:
+                    json_response(self, exc.status, {"error": str(exc)})
+                except Exception as exc:
+                    json_response(self, 503, {"error": str(exc)})
+                return
             if path == "/v1/audio/streams" or path.startswith("/v1/audio/streams/"):
                 self.stream_request(path)
                 return
