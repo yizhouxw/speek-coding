@@ -112,7 +112,7 @@ ${programArguments}
 \t<string>${xmlEscape(runtime.asrStderrLogPath)}</string>
 \t<key>EnvironmentVariables</key>
 \t<dict>
-\t\t<key>PATH</key>
+${runtime.configFilePath ? `\t\t<key>SPEEK_CONFIG_FILE</key>\n\t\t<string>${xmlEscape(runtime.configFilePath)}</string>\n` : ""}\t\t<key>PATH</key>
 \t\t<string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
 \t</dict>
 </dict>

@@ -29,3 +29,7 @@ CLI 的录音触发、取消、权限检查和测试录音通过每用户 Unix s
 
 Karabiner 规则只执行已安装的 `speek-command` 客户端，由它携带同一凭据发送 `toggle`。App 也注册了 `speekcoding://` URL Scheme 作为受保护的可选入口，但只接受带有效 token 的 `toggle` / `cancel`，且不接受配置覆盖。
 
+
+## Offline correction quality checks
+
+The normal tests mock model execution and never download weights. After downloading a text model from Model Management, run `python3 test/evaluate-correction.py <model-id>` with the MLX runtime Python to evaluate the small, multi-topic fixture set. The script checks preservation of key content and removal of hesitation sounds and prints latency; it is a regression sample, not a comprehensive quality benchmark.

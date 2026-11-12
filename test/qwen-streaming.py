@@ -74,6 +74,18 @@ class StreamingTests(unittest.TestCase):
         self.assertEqual(caught.exception.code, code)
         caught.exception.close()
 
+    def test_local_models_reject_origins_and_switch_only_when_idle(self):
+        self.url = self.url.replace('/audio/streams', '/models/select')
+        data = json.dumps({'model': asr.QWEN_MODEL}).encode()
+        self.error(403, body=data, Origin='https://example.com')
+        self.error(400, body=b'{"model":"unknown"}')
+        self.error(400, body=b'{"model":[]}')
+        self.error(400, body=b'{')
+        with patch.object(asr.LocalTextModel, 'model_path', return_value='/cached'):
+            self.assertTrue(self.post(body=data)['ok'])
+            self.engine.streams['active'] = {}
+            self.error(409, body=data)
+
     def test_prepare_reports_readiness_and_rejects_browser_origins(self):
         url = self.url.replace("/streams", "/prepare")
         request = urllib.request.Request(url, data=b"", method="POST")

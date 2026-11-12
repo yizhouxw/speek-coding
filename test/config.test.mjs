@@ -61,8 +61,9 @@ test('transcript cleanup defaults on and preserves the disabled preference', asy
 	const configDir = await fs.mkdtemp(path.join(os.tmpdir(), 'speek-cleanup-'));
 	context.after(() => fs.rm(configDir, { recursive: true, force: true }));
 	const runtime = { configDir, configFilePath: path.join(configDir, 'config.env') };
-	await writeConfig(runtime, { ...DEFAULT_CONFIG, transcriptCleanup: false });
+	await writeConfig(runtime, { ...DEFAULT_CONFIG, transcriptCleanup: false, textModel: "mlx-community/Qwen3-0.6B-4bit" });
 	assert.equal((await loadConfig(runtime)).transcriptCleanup, false);
+	assert.equal((await loadConfig(runtime)).textModel, "mlx-community/Qwen3-0.6B-4bit");
 });
 
 test('writeConfig emits canonical SPEEK preferences', async (context) => {

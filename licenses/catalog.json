@@ -10,6 +10,22 @@
     },
     {
       "kind": "model weights / 模型权重",
+      "name": "Qwen3-ASR-1.7B-4bit, Qwen3-0.6B-4bit and Qwen3-1.7B-4bit",
+      "license": "Apache-2.0",
+      "source": "https://huggingface.co/Qwen/Qwen3-1.7B",
+      "scope": "Optional local speech and text models. Weights are downloaded separately at pinned revisions.",
+      "file": "upstream/Qwen3-ASR-Apache-2.0.txt"
+    },
+    {
+      "kind": "model weights / 模型权重",
+      "name": "Qwen3-4B-Instruct-2507-4bit",
+      "license": "Apache-2.0",
+      "source": "https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507",
+      "scope": "Optional local text correction model. Quantized weights are downloaded separately at a pinned revision.",
+      "file": "upstream/Qwen3-ASR-Apache-2.0.txt"
+    },
+    {
+      "kind": "model weights / 模型权重",
       "name": "OpenAI Whisper, large-v3-turbo and faster-whisper converted weights",
       "license": "MIT",
       "source": "https://github.com/openai/whisper",
@@ -128,6 +144,11 @@
       "version": "0.23.1",
       "source": "https://github.com/huggingface/tokenizers/blob/v0.23.1/LICENSE",
       "file": "upstream/Tokenizers-Apache-2.0.txt"
+    },
+    "sentencepiece": {
+      "version": "0.2.3",
+      "source": "https://raw.githubusercontent.com/google/sentencepiece/v0.2.3/LICENSE",
+      "file": "upstream/sentencepiece-Apache-2.0.txt"
     }
   }
 }

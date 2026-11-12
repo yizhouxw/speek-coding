@@ -23,7 +23,6 @@ swiftc scripts/speek-coding-app.swift -O -o "$TMP_DIR/speek-coding-app-validate"
 	-framework ApplicationServices \
 	-framework CoreAudio \
 	-framework CoreGraphics
-"$TMP_DIR/speek-coding-app-validate" --cleanup-self-test test/transcript-cleanup.json
 "$TMP_DIR/speek-coding-app-validate" --localization-self-test
 "$TMP_DIR/speek-coding-app-validate" --license-self-test licenses/LICENSES.txt
 python3 -B test/qwen-streaming.py --native-client "$TMP_DIR/speek-coding-app-validate"

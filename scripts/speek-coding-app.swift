@@ -234,6 +234,15 @@ private enum MenuText: String, CaseIterable {
 	case systemMicrophone = "System Default Microphone"
 	case disconnected = "%@ (disconnected)"
 	case featureSettings = "Feature Settings"
+	case modelManagement = "Model Management"
+	case speechModels = "Speech recognition models"
+	case textModels = "Text generation models"
+	case downloadModel = "Download"
+	case selectModel = "Select"
+	case modelWorking = "Working…"
+	case localModelsRequired = "Local Qwen service required"
+	case intelligentCorrection = "Intelligent correction"
+	case correctionHelp = "Use the selected local text model to correct the final transcript."
 	case autoSend = "Auto-send (press Return after pasting)"
 	case autoSendHelp = "When checked, paste and press Return. When unchecked, paste only."
 	case language = "Language"
@@ -281,6 +290,15 @@ private enum MenuText: String, CaseIterable {
 		case .systemMicrophone: return ("系统默认麦克风", "系統預設麥克風")
 		case .disconnected: return ("%@（未连接）", "%@（未連接）")
 		case .featureSettings: return ("功能设置", "功能設定")
+		case .modelManagement: return ("模型管理", "模型管理")
+		case .speechModels: return ("语音识别模型", "語音辨識模型")
+		case .textModels: return ("文本生成模型", "文字生成模型")
+		case .downloadModel: return ("下载", "下載")
+		case .selectModel: return ("选择", "選擇")
+		case .modelWorking: return ("处理中…", "處理中…")
+		case .localModelsRequired: return ("需要本地 Qwen 引擎服务", "需要本機 Qwen 引擎服務")
+		case .intelligentCorrection: return ("智能纠错", "智慧糾錯")
+		case .correctionHelp: return ("使用所选本地文本模型整理并纠正最终转写。", "使用所選本機文字模型整理並糾正最終轉寫。")
 		case .autoSend: return ("自动发送（粘贴时附加回车）", "自動傳送（貼上時附加 Return）")
 		case .autoSendHelp: return ("勾选时粘贴后按回车；取消勾选时仅粘贴。", "勾選時貼上後按 Return；取消勾選時僅貼上。")
 		case .language: return ("语言", "語言")
@@ -343,6 +361,7 @@ private struct AgentConfig {
 	let asrBackend: String
 	let asrStreaming: Bool
 	let transcriptCleanup: Bool
+	let textModel: String
 	let asrModel: String
 	let asrLanguage: String
 	let asrPrompt: String
@@ -426,6 +445,7 @@ private struct AgentConfig {
 			asrBackend: backend,
 			asrStreaming: boolean(["asrStreaming"], "SPEEK_ASR_STREAMING", default: true),
 			transcriptCleanup: boolean(["transcriptCleanup"], "SPEEK_TRANSCRIPT_CLEANUP", default: true),
+			textModel: value(["textModel"], "SPEEK_TEXT_MODEL", default: "mlx-community/Qwen3-4B-Instruct-2507-4bit"),
 			asrModel: value(["asrModel", "asr_model"], "SPEEK_ASR_MODEL",
 				default: backend == "qwen-mlx" ? "mlx-community/Qwen3-ASR-0.6B-4bit" : "whisper-large-v3-turbo"),
 			asrLanguage: value(["asrLanguage", "asr_language"], "SPEEK_ASR_LANGUAGE", default: ""),
@@ -795,67 +815,39 @@ private final class NativeRecorder: @unchecked Sendable {
 
 // MARK: - ASR and delivery
 
-private enum TranscriptCleaner {
-	// Literal text is never rewritten. An unfinished code span protects the rest
-	// of the transcript as well, rather than treating code as spoken prose.
-	private static let literals = try! NSRegularExpression(pattern:
-		#"```[\s\S]*?(?:```|\z)|`[^`\n]*(?:`|\z)|“[^”\n]*”|「[^」\n]*」|‘[^’\n]*’|'[^'\n]*'|\"[^\"\n]*\"|https?://[^\s，。；！？]+|(?:[~/]|[A-Za-z]:\\)[^\s，。；！？]+"#)
-	private static let rules: [(NSRegularExpression, String)] = {
-		var pairs: [(String, String)] = [
-			// Only standalone hesitation sounds; keep words such as 嗯嗯/呃逆,
-			// meaningful repetition, negation, and the speaker's 啊/呢/吧.
-			(#"(?<=[的是把用和])[，,][ \t]*[嗯呃][，,][ \t]*"#, ""),
-			(#"(^|[。.!！?？；;\n])[ \t]*[嗯呃][。.!！?？；;][ \t]*"#, "$1"),
-			(#"[，,][ \t]*[嗯呃](?=[。.!！?？；;])"#, ""),
-			(#"(^|[\s，,。.!！?？；;：:])[嗯呃](?:[，,、][ \t]*|[ \t]+|(?=[。.!！?？；;\n]|$))"#, "$1"),
-			// A short, explicit vocabulary avoids removing arbitrary sentence ends.
-			(#"(?<=也)[。][ \t]*(?=包含|包括|需要|应该)"#, ""),
-			(#"(?<=使用)[，,][ \t]*(?=(?i:squash[ \t]+merge))"#, ""),
-			// Restrict phonetic corrections to their software-engineering context.
-			(#"(?i)(?<![A-Za-z0-9_])(?:agent|agena)(?:[ \t]*(?:的[ \t]*)?(?:哈尼斯|哈纳斯)|(?:[ \t]+|的[ \t]*)harness)(?![A-Za-z0-9_])"#, "Agent harness"),
-			(#"(?i)(?<=做)[ \t]*力[ \t]*vu(?=[，,、 \t]*(?:优化|一下))"#, " review"),
-			(#"(?i)(?<=整体)[ \t]*力[ \t]*vu(?=[ \t]*一下)"#, " review"),
-		]
-		for word in ["过多", "包含", "实施", "提交", "合并", "优化", "约束"] {
-			let letters = Array(word).map(String.init)
-			pairs.append((letters.joined(separator: #"[。][ \t]*"#), word))
-		}
-		return pairs.map { (try! NSRegularExpression(pattern: $0.0), $0.1) }
-	}()
-
-	static func clean(_ raw: String, enabled: Bool = true) -> String {
-		guard enabled else { return raw }
-		let source = raw as NSString
-		var result = ""
-		var cursor = 0
-		for match in literals.matches(in: raw, range: NSRange(location: 0, length: source.length)) {
-			result += cleanProse(source.substring(with: NSRange(location: cursor, length: match.range.location - cursor)))
-			result += source.substring(with: match.range)
-			cursor = NSMaxRange(match.range)
-		}
-		result += cleanProse(source.substring(from: cursor))
-		if result.range(of: #"^[\s，,。.!！?？；;：:]*$"#, options: .regularExpression) != nil { return "" }
-		return result.trimmingCharacters(in: .whitespacesAndNewlines)
-	}
-
-	private static func cleanProse(_ raw: String) -> String {
-		var text = raw
-		// Repeat the filler pass to handle consecutive hesitations without
-		// deleting adjacent punctuation or crossing paragraph boundaries.
-		var previous: String
-		repeat {
-			previous = text
-			for (regex, replacement) in rules {
-				text = regex.stringByReplacingMatches(in: text, range: NSRange(text.startIndex..., in: text), withTemplate: replacement)
-			}
-		} while text != previous
-		// PI is a valid acronym. Correct it only in an explicit PR workflow and
-		// only when it occupies the same "one PR" phrase, not in math or code.
-		if raw.range(of: #"(?<![A-Za-z0-9_])PR(?![A-Za-z0-9_])"#, options: .regularExpression) != nil {
-			text = text.replacingOccurrences(of: #"(包含到|合并到|放到|纳入|放在)(一个)PI(?=里面|里|中)"#, with: "$1$2PR", options: .regularExpression)
-		}
-		return text
-	}
+private enum LocalModelClient {
+    @discardableResult
+    static func request(_ path: String, body: JSONObject? = nil,
+                        completion: @escaping (Result<JSONObject, Error>) -> Void) -> URLSessionDataTask? {
+        let config = AgentConfig.load()
+        guard var endpoint = URLComponents(string: config.asrAPIURL), isLoopbackHost(endpoint.host) else {
+            completion(.failure(failure("LOCAL_MODEL_REQUIRED", "Select the local Qwen backend to use local models.")))
+            return nil
+        }
+        endpoint.path = path
+        endpoint.query = nil
+        guard let url = endpoint.url else {
+            completion(.failure(failure("INVALID_LOCAL_MODEL_URL", "Invalid local model service URL.")))
+            return nil
+        }
+        var request = URLRequest(url: url, timeoutInterval: path.hasSuffix("download") ? 3600 : 180)
+        if let body {
+            request.httpMethod = "POST"
+            request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error { completion(.failure(error)); return }
+            let object = data.flatMap { try? JSONSerialization.jsonObject(with: $0) as? JSONObject } ?? [:]
+            guard let response = response as? HTTPURLResponse, (200..<300).contains(response.statusCode) else {
+                completion(.failure(failure("LOCAL_MODEL_FAILED", object["error"] as? String ?? "Local model service unavailable.")))
+                return
+            }
+            completion(.success(object))
+        }
+        task.resume()
+        return task
+    }
 }
 
 private enum NativeTranscriber {
@@ -1604,7 +1596,7 @@ private final class SpeekAgent: @unchecked Sendable {
 						self.clearSession()
 						completion(errorResponse(command: command, error: error, state: self.state.rawValue))
 					case .success(let transcript):
-						self.finishTranscription(
+						self.correctTranscription(
 							transcript: transcript,
 							recording: recording,
 							config: config,
@@ -1678,6 +1670,39 @@ private final class SpeekAgent: @unchecked Sendable {
 		}.resume()
 	}
 
+	private func correctTranscription(transcript: String, recording: RecordingResult, config: AgentConfig,
+                                      identifier: String, command: String, completion: @escaping AgentCompletion) {
+        guard config.transcriptCleanup, config.asrBackend == "qwen-mlx", !transcript.isEmpty else {
+            finishTranscription(transcript: transcript, recording: recording, config: config,
+                                identifier: identifier, command: command, completion: completion)
+            return
+        }
+        files.updateHUD(status: "transcribing", detail: "Correcting text locally…")
+        asrTask = LocalModelClient.request("/v1/text/correct", body: ["model": config.textModel, "text": transcript]) { result in
+            self.queue.async {
+                guard self.state == .transcribing, self.sessionID == identifier else {
+                    completion(errorResponse(command: command, error: failure("CANCELED", "Correction canceled."), state: self.state.rawValue))
+                    return
+                }
+                self.asrTask = nil
+                if case .success(let object) = result, let text = object["text"] as? String {
+                    self.finishTranscription(transcript: text, recording: recording, config: config,
+                                             identifier: identifier, command: command, completion: completion)
+                } else {
+                    // Preserve the original on the clipboard, without auto-sending uncorrected text.
+                    let copied = (try? NativeDelivery.deliver(text: transcript, mode: "clipboard_only", targetProcessIdentifier: nil)) != nil
+                    self.state = .idle
+                    self.files.updateHUD(status: "error", detail: copied ? "Correction unavailable. Original copied; check Model Management." : "Correction and clipboard delivery failed.")
+                    self.clearSession()
+                    var response = errorResponse(command: command, error: failure("CORRECTION_FAILED", copied ? "Local correction failed; original copied to clipboard." : "Local correction and clipboard delivery failed."), state: self.state.rawValue)
+                    response["transcript"] = transcript
+                    if case .failure(let error) = result { response["correctionError"] = error.localizedDescription }
+                    completion(response)
+                }
+            }
+        }
+    }
+
 	private func finishTranscription(
 		transcript: String,
 		recording: RecordingResult,
@@ -1686,7 +1711,6 @@ private final class SpeekAgent: @unchecked Sendable {
 		command: String,
 		completion: @escaping AgentCompletion
 	) {
-		let transcript = TranscriptCleaner.clean(transcript, enabled: config.transcriptCleanup)
 		guard !transcript.isEmpty else {
 			state = .idle
 			files.updateHUD(status: "nospeech", detail: "No speech recognized")
@@ -2193,6 +2217,10 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 	private var agentStarted = false
 	private var statusItem: NSStatusItem?
 	private var downloadingKarabiner = false
+	private var modelItems: [JSONObject] = []
+	private var modelBusy = false
+	private var activeModelID: String?
+	private var modelRefresh = Date.distantPast
 	private var licenseWindow: LicenseWindowController?
 	private let karabinerCLI = "/Library/Application Support/org.pqrs/Karabiner-Elements/bin/karabiner_cli"
 	private let karabinerWebsite = URL(string: "https://karabiner-elements.pqrs.org/")!
@@ -2204,6 +2232,7 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 		item.button?.image = statusBarIcon()
 		item.button?.title = item.button?.image == nil ? "Speek" : ""
 		let menu = NSMenu()
+		menu.autoenablesItems = false
 		menu.delegate = self
 		item.menu = menu
 		statusItem = item
@@ -2253,6 +2282,13 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 		autoSend.state = config.deliveryMode == "clipboard_only" ? .mixed : (config.deliveryMode == "paste_and_send" ? .on : .off)
 		autoSend.toolTip = menuText(.autoSendHelp)
 		menu.addItem(autoSend)
+		let correction = NSMenuItem(title: menuText(.intelligentCorrection), action: #selector(toggleCorrection(_:)), keyEquivalent: "")
+		correction.target = self
+		correction.state = config.transcriptCleanup && config.asrBackend == "qwen-mlx" ? .on : .off
+		correction.isEnabled = config.asrBackend == "qwen-mlx"
+		correction.toolTip = menuText(.correctionHelp)
+		menu.addItem(correction)
+		addModelMenu(to: menu, config: config)
 		let languageItem = NSMenuItem(title: menuText(.language), action: nil, keyEquivalent: "")
 		languageItem.toolTip = menuText(.languageHelp)
 		let languages = NSMenu(title: menuText(.language))
@@ -2443,6 +2479,88 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 		if let menu = statusItem?.menu { menuWillOpen(menu) }
 	}
 
+	private func addModelMenu(to menu: NSMenu, config: AgentConfig) {
+        let root = NSMenuItem(title: menuText(.modelManagement), action: nil, keyEquivalent: "")
+        let submenu = NSMenu()
+        root.submenu = submenu
+        menu.addItem(root)
+        for (kind, title) in [("asr", MenuText.speechModels), ("text", MenuText.textModels)] {
+            let group = NSMenuItem(title: menuText(title), action: nil, keyEquivalent: "")
+            let choices = NSMenu()
+            choices.autoenablesItems = false
+            group.submenu = choices
+            submenu.addItem(group)
+            for model in modelItems where model["kind"] as? String == kind {
+                guard let identifier = model["id"] as? String else { continue }
+                let downloaded = model["downloaded"] as? Bool ?? false
+                let suffix = modelBusy && activeModelID == identifier ? menuText(.modelWorking) : menuText(downloaded ? .selectModel : .downloadModel)
+                let item = NSMenuItem(title: "\(identifier.components(separatedBy: "/").last!) — \(suffix)", action: #selector(chooseModel(_:)), keyEquivalent: "")
+                item.target = self
+                item.representedObject = model
+                item.isEnabled = !modelBusy
+                item.state = identifier == (kind == "asr" ? config.asrModel : config.textModel) ? .on : .off
+                choices.addItem(item)
+            }
+            if choices.items.isEmpty {
+                let info = NSMenuItem(title: menuText(.localModelsRequired), action: nil, keyEquivalent: "")
+                info.isEnabled = false
+                choices.addItem(info)
+            }
+        }
+        if !modelBusy, Date().timeIntervalSince(modelRefresh) > 3 {
+            modelRefresh = Date()
+            LocalModelClient.request("/v1/models") { result in
+                DispatchQueue.main.async {
+                    if case .success(let object) = result {
+                        self.modelRefresh = Date()
+                        self.modelItems = object["supported"] as? Bool == true ? (object["models"] as? [JSONObject] ?? []) : []
+                        if let menu = self.statusItem?.menu { self.menuWillOpen(menu) }
+                    }
+                }
+            }
+        }
+    }
+
+    @objc private func chooseModel(_ sender: NSMenuItem) {
+        guard !modelBusy, let model = sender.representedObject as? JSONObject,
+              let identifier = model["id"] as? String, let kind = model["kind"] as? String else { return }
+        modelBusy = true
+        activeModelID = identifier
+        let downloaded = model["downloaded"] as? Bool ?? false
+        let path = downloaded ? "/v1/models/select" : "/v1/models/download"
+        let previousModel = AgentConfig.load().asrModel
+        let finish: (Result<JSONObject, Error>) -> Void = { result in
+            DispatchQueue.main.async {
+                self.modelBusy = false
+                self.activeModelID = nil
+                switch result {
+                case .success:
+                    if downloaded {
+                        do { try saveConfigValues([kind == "asr" ? "SPEEK_ASR_MODEL" : "SPEEK_TEXT_MODEL": "'\(identifier)'"]) }
+                        catch {
+                            if kind == "asr" { LocalModelClient.request("/v1/models/select", body: ["model": previousModel]) { _ in } }
+                            NSAlert(error: error).runModal()
+                        }
+                    }
+                case .failure(let error): NSAlert(error: error).runModal()
+                }
+                self.modelRefresh = .distantPast
+                if let menu = self.statusItem?.menu { self.menuWillOpen(menu) }
+            }
+        }
+        if downloaded && kind == "text" { finish(.success([:])) }
+        else { LocalModelClient.request(path, body: ["model": identifier], completion: finish) }
+        if let menu = statusItem?.menu { menuWillOpen(menu) }
+    }
+
+	@objc private func toggleCorrection(_ sender: NSMenuItem) {
+		guard AgentConfig.load().asrBackend == "qwen-mlx" else { return }
+		do {
+			try saveConfigValues(["SPEEK_TRANSCRIPT_CLEANUP": sender.state == .on ? "0" : "1"])
+			if let menu = statusItem?.menu { menuWillOpen(menu) }
+		} catch { NSAlert(error: error).runModal() }
+	}
+
 	@objc private func toggleAutoSend(_ sender: NSMenuItem) {
 		let mode = sender.state == .on ? "paste_only" : "paste_and_send"
 		do { try saveConfigValues(["SPEEK_DELIVERY_MODE": "'\(mode)'"]) }
@@ -2499,29 +2617,6 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 		}
 		return request
 	}
-}
-
-private func runTranscriptCleanupSelfTest() throws {
-	guard CommandLine.arguments.count >= 3 else { throw failure("TEST_ARGUMENTS", "Expected cleanup fixtures path.") }
-	let data = try Data(contentsOf: URL(fileURLWithPath: CommandLine.arguments[2]))
-	let cases = try JSONSerialization.jsonObject(with: data) as! [[String: String]]
-	let enabled = AgentConfig.load(overrides: ["transcriptCleanup": true])
-	let disabled = AgentConfig.load(overrides: ["transcriptCleanup": false])
-	for item in cases {
-		let input = item["input"]!
-		let expected = item["expected"]!
-		let actual = TranscriptCleaner.clean(input, enabled: enabled.transcriptCleanup)
-		guard actual == expected else {
-			throw failure("TEST_CLEANUP", "\(item["name"]!): expected \(expected.debugDescription), got \(actual.debugDescription)")
-		}
-		guard TranscriptCleaner.clean(actual) == actual else {
-			throw failure("TEST_CLEANUP", "Cleanup must be idempotent: \(item["name"]!)")
-		}
-		guard TranscriptCleaner.clean(input, enabled: disabled.transcriptCleanup) == input else {
-			throw failure("TEST_CLEANUP", "Disabled cleanup changed the transcript.")
-		}
-	}
-	print("Transcript cleanup self-test passed (\(cases.count) fixtures, idempotence, and disabled mode).")
 }
 
 private func runMenuLocalizationSelfTest() {
@@ -2642,11 +2737,6 @@ private func runLicenseSelfTest() throws {
 		precondition(!window.isVisible)
 	}
 	print("License self-test passed (project, model and dependency text; optional preview and dismiss controls).")
-}
-
-if CommandLine.arguments.contains("--cleanup-self-test") {
-	do { try runTranscriptCleanupSelfTest(); exit(EXIT_SUCCESS) }
-	catch { FileHandle.standardError.write(Data("\(error)\n".utf8)); exit(EXIT_FAILURE) }
 }
 
 if CommandLine.arguments.contains("--license-self-test") {

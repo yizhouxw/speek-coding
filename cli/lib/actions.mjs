@@ -557,7 +557,7 @@ export async function installAsrRuntime(runtime) {
 	const qwen = config.asrBackend === 'qwen-mlx';
 	const packageName = qwen ? 'mlx-qwen3-asr==0.4.4' : 'faster-whisper>=1.2,<2';
 	if (runtime.bundledPythonPath && (await pathExists(runtime.bundledPythonPath))) {
-		await execFile(runtime.bundledPythonPath, ['-B', '-c', qwen ? 'import mlx_qwen3_asr, mlx.core' : 'import faster_whisper'], { env: runtime.env });
+		await execFile(runtime.bundledPythonPath, ['-B', '-c', qwen ? 'import mlx_qwen3_asr, mlx.core, mlx_lm' : 'import faster_whisper'], { env: runtime.env });
 		await fs.mkdir(runtime.configDir, { recursive: true });
 		await fs.copyFile(runtime.asrServerSourcePath, runtime.asrServerTargetPath);
 		await fs.chmod(runtime.asrServerTargetPath, 0o755);
@@ -576,7 +576,7 @@ export async function installAsrRuntime(runtime) {
 	await fs.mkdir(runtime.configDir, { recursive: true });
 	await fs.copyFile(runtime.asrServerSourcePath, runtime.asrServerTargetPath);
 	await fs.chmod(runtime.asrServerTargetPath, 0o755);
-	await execFile(venvPython, ['-m', 'pip', 'install', ...(qwen ? [packageName, 'mlx==0.30.6'] : [packageName])], {
+	await execFile(venvPython, ['-m', 'pip', 'install', ...(qwen ? [packageName, 'mlx==0.30.6', 'mlx-lm==0.28.4'] : [packageName])], {
 		env: runtime.env,
 	});
 	return {

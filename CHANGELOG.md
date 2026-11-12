@@ -4,7 +4,7 @@ Public releases follow [Semantic Versioning](https://semver.org/). Version numbe
 
 ## [Unreleased]
 
-- Clean final transcripts locally before delivery across streaming and file-based ASR: remove standalone Chinese hesitations, repair selected pause-split phrases, and correct contextual coding terms while preserving literal code and quoted text. Add `--transcript-cleanup on|off` (default on) and expand the default ASR vocabulary hint.
+- Replace example-specific transcript rules with offline small-Chat-model correction on the Apple Silicon Qwen backend. Add a persistent Intelligent correction menu toggle and separate speech/text model download and selection menus. Preserve the original on the clipboard without auto-sending if correction fails.
 - Prepare local transcription models before opening the microphone, show initialization progress, and allow Fn/HUD cancellation. Failed initialization leaves recording stopped and can be retried.
 
 ## [0.2.0] - 2026-11-06

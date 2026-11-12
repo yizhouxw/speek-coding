@@ -36,7 +36,7 @@ Options:
   --asr-language <lang>  auto or a fixed language code such as zh/en
   --asr-prompt <text>    Optional transcription vocabulary hint
   --transcript-cleanup <on|off>
-                         Clean fillers, broken phrases, and coding terms (default: on)
+                         Local Chat-model correction on Apple Silicon Qwen (default: on)
   --fake-transcript <t>  Bypass ASR with a fixed transcript
   --asr-backend <name>   qwen-mlx | faster-whisper | whisper-cpp
   --asr-host <host>      Local ASR loopback bind host
