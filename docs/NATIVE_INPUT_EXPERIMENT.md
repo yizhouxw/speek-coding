@@ -55,3 +55,11 @@ swift run --package-path NativeInput native-input-diagnose --seconds 30
 - 回归测试覆盖单击、重复释放、其他键/系统按键/鼠标取消、预先按住其他键、长按、tap 禁用、状态重置。补充了 `systemDefined` 监听以覆盖媒体键路径，依据 [Apple 的系统事件定义](https://developer.apple.com/documentation/appkit/nsevent/eventtype/systemdefined)。
 
 尚待验证：正式 App 权限主体下的端到端录音、macOS 13/14、外接键盘、权限撤销、睡眠/唤醒及系统保留组合。独立诊断实测不等于上述场景全部通过。下一阶段需完成原生安装流程和 DJI 设备级事件处理，才能宣称整个 App 不依赖 Karabiner。
+
+## DJI UserKeyMapping：自动验证阶段
+
+`DJIMapping` 是无副作用的映射规划层，尚未写入真实设备。仅接受 USB、VID 11427/PID 16401、Consumer Control 0x0c/0x01 且有有效 registry ID 的服务；仅添加 `0x0000000c000000e9 → 0`。其他映射按原顺序保留。遇到用户已有的不同目标映射或重复源条目时拒绝接管。
+
+恢复计划绑定原 registry ID，且仅在当前映射仍与安装结果完全一致时才返回原值；用户本来已有的屏蔽映射不由应用删除。实际属性写入仍需要串行化、写后读取校验及处理外部修改竞争，这个纯规划层不提供系统级原子保证。
+
+自动测试覆盖非 DJI 设备、键盘/鼠标服务排除、其他音量键映射保留、用户配置冲突、重连接口身份变化与退出恢复所有权。它们只证明规划规则，不证明系统已屏蔽事件，也不证明音频输入或热插拔行为已经实测通过。后续需将按服务属性适配器与原始 HID 监听组合，只有映射确认成功才进入就绪状态；不能以全局 UserKeyMapping 写入替代服务级操作。
