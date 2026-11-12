@@ -1,0 +1,25 @@
+CHANGELOG.md
+  s_d1acf170903776::t_93ed1fc4254b55 7-8
+website/index.html
+  s_d1acf170903776::t_e36dd7ae8f31e0 2
+website/style.css
+  s_d1acf170903776::t_615520879c0860 1,4-8,11-17
+website/zh.html
+  s_d1acf170903776::t_332df5a5504213 2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "671a67a6c3623380239e572ecb4f117f125e252c",
+  "prompts": {},
+  "sessions": {
+    "s_d1acf170903776": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1ce5e-ec74-7d63-93d0-e7b3d20f393d",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "yizhouxw <54161870+yizhouxw@users.noreply.github.com>"
+    }
+  }
+}
