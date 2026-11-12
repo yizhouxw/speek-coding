@@ -1086,6 +1086,9 @@ async function run() {
 					configOverrides: buildConfigOverrides(flags),
 				});
 				s.stop(`Updated installation on profile ${result.profileName}`);
+				if (interactive && result.appCleanup?.warnings.length) {
+					note(result.appCleanup.warnings.join('\n'), 'Old app cleanup warnings');
+				}
 				if (interactive && result.profileSwitch.status === 'failed') {
 					note(
 						`Karabiner CLI could not switch to profile "${result.profileName}" automatically. Select it manually in Karabiner-Elements if needed.`,

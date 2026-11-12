@@ -182,3 +182,9 @@ speek uninstall
 ```
 
 `speek uninstall` 会停止 ASR 服务并移除当前用户的 LaunchAgent、鉴权 token、Karabiner 托管规则和客户端、HUD、配置及日志，但不会删除由系统安装器管理的 `/Applications/SpeekCoding.app` 和 `/usr/local/bin` 命令。完整移除发布包可再执行 `sudo rm -rf /Applications/SpeekCoding.app /usr/local/bin/speek /usr/local/bin/speek-coding`。模型缓存默认保留，便于以后重新安装。
+
+### 更新与旧版本清理
+
+`speek update` 在新 App 启动检查通过、配置保存后，自动清理 Applications 目录中的旧 SpeekCoding 安装和项目生成的旧打包 App，并注销本应用的残留 Launch Services 记录，避免搜索中出现重复图标。只处理 bundle identifier 为 `com.speek.coding` 的应用；运行中的旧 App 会保留并报告，退出后再次更新即可清理。清理失败不会回滚已成功安装的新版本，详情见输出的 `appCleanup.warnings`。
+
+模型下载缓存独立于 App，默认位于 `~/.cache/huggingface/hub`，升级时保留，不需要重新下载。配置、当前 Python 环境及通过 Hugging Face 环境变量指定的模型缓存路径也会受到保护。

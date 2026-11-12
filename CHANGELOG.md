@@ -4,6 +4,8 @@ Public releases follow [Semantic Versioning](https://semver.org/). Version numbe
 
 ## [Unreleased]
 
+- After a successful update, remove verified old application copies and stale Launch Services registrations while retaining downloaded models and active Python environments.
+
 - Preserve the application icon in source-based installations and updates.
 
 - Replace example-specific transcript rules with offline small-Chat-model correction on the Apple Silicon Qwen backend. Add a persistent Intelligent correction menu toggle and separate speech/text model download and selection menus. Preserve the original on the clipboard without auto-sending if correction fails.

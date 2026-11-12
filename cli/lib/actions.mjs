@@ -26,6 +26,7 @@ import { detectPermissions } from './permissions.mjs';
 import { filterInstallPermissionReport } from './install-permissions.mjs';
 import { uninstallAsrService } from './service.mjs';
 import { getAgentStatus, sendAgentCommand } from './agent.mjs';
+import { cleanupOldApps } from './app-cleanup.mjs';
 
 const execFile = promisify(execFileCallback);
 const MANIFEST_VERSION = 2;
@@ -761,8 +762,10 @@ async function syncInstallation(runtime, { profileOptions = {}, configOverrides 
 	};
 	await writeManifest(runtime, manifest);
 	const permissions = filterInstallPermissionReport(await detectPermissions(runtime));
+	const appCleanup = await cleanupOldApps(runtime, installedConfig);
 
 	return {
+		appCleanup,
 		config: installedConfig,
 		manifest,
 		device: resolveConnectedDeviceStatus(normalizedTriggerMode, detectedDevice),
