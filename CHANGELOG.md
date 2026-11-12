@@ -4,6 +4,8 @@ Public releases follow [Semantic Versioning](https://semver.org/). Version numbe
 
 ## [Unreleased]
 
+- Provide separate English and Chinese product pages with a header language switch.
+
 - Add the GitHub Pages product introduction site.
 
 ## [0.3.0] - 2026-11-12
