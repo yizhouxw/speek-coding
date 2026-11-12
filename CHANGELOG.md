@@ -4,6 +4,8 @@ Public releases follow [Semantic Versioning](https://semver.org/). Version numbe
 
 ## [Unreleased]
 
+- Redesign the product site with a midnight-blue palette and clearer action contrast.
+
 - Provide separate English and Chinese product pages with a header language switch.
 
 - Add the GitHub Pages product introduction site.
