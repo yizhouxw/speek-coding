@@ -1,0 +1,21 @@
+CHANGELOG.md
+  s_d1acf170903776::t_8223c743ead84f 7-8
+scripts/speek-coding-app.swift
+  s_d1acf170903776::t_7fe4ce8747b1f7 2489-2490,2535-2536
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "9c97d54ad7df820ccedf003edd0b0457600bcd3a",
+  "prompts": {},
+  "sessions": {
+    "s_d1acf170903776": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1ce5e-ec74-7d63-93d0-e7b3d20f393d",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "yizhouxw <54161870+yizhouxw@users.noreply.github.com>"
+    }
+  }
+}
