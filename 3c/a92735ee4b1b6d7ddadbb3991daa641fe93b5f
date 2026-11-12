@@ -1,0 +1,21 @@
+CHANGELOG.md
+  s_d1acf170903776::t_d2354cf35c46de 7-8
+cli/lib/config.mjs
+  s_d1acf170903776::t_2180f161177807 20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "3ca92735ee4b1b6d7ddadbb3991daa641fe93b5f",
+  "prompts": {},
+  "sessions": {
+    "s_d1acf170903776": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1ce5e-ec74-7d63-93d0-e7b3d20f393d",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "yizhouxw <54161870+yizhouxw@users.noreply.github.com>"
+    }
+  }
+}
