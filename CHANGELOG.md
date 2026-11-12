@@ -4,6 +4,8 @@ Public releases follow [Semantic Versioning](https://semver.org/). Version numbe
 
 ## [Unreleased]
 
+- Leave ASR context empty by default to avoid instruction text leaking into recognition results. Explicit custom ASR prompts remain supported.
+
 - Fix unresponsive status menus when enabling native Fn or DJI by removing modal guidance dialogs from the toggle actions.
 
 - Add opt-in native DJI input with device-scoped UserKeyMapping, verified suppression before triggering, normal-exit restoration and crash-recovery records. Add read-only and bounded write/restore diagnostics; physical button/audio validation remains pending.

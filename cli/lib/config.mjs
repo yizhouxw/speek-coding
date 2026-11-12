@@ -17,8 +17,7 @@ export const DEFAULT_CONFIG = Object.freeze({
 	textModel: 'mlx-community/Qwen3-4B-Instruct-2507-4bit',
 	asrApiKeyEnv: 'ASR_API_KEY',
 	asrLanguage: '',
-	asrPrompt:
-		'中英混合软件工程口述 / Mixed Chinese-English software engineering dictation. 保持说话者原始的中英文切换；preserve code identifiers, commands, filenames, acronyms, product names, and punctuation. 不要互相翻译中英文。',
+	asrPrompt: '',
 	asrBackend: appleSilicon ? 'qwen-mlx' : 'faster-whisper',
 	asrHost: '127.0.0.1',
 	asrPort: 8000,
