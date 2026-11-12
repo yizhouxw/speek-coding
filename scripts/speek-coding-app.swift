@@ -18,6 +18,7 @@ import NativeInput
 private let agentName = "SpeekCoding"
 private let agentBundleIdentifier = "com.speek.coding"
 private let nativeFnPreference = "nativeFnEnabled"
+private let nativeDJIPreference = "nativeDJIEnabled"
 private let protocolVersion = 1
 private let stateDirectoryURL = URL(fileURLWithPath: "/tmp/speek-coding-\(geteuid())", isDirectory: true)
 private let socketURL = stateDirectoryURL.appendingPathComponent("agent.sock")
@@ -261,9 +262,13 @@ private enum MenuText: String, CaseIterable {
 	case eventPostingRequired = "Allow Simulated Keystrokes"
 	case deliveryStatus = "Automatic Paste and Send: %@…"
 	case deliveryHelp = "Copy transcription to the clipboard, then paste it automatically. Auto-send also presses Return. Clipboard-only mode does not require this permission."
+	case nativeDJI = "Native DJI button (experimental)"
+	case nativeDJIWaiting = "Native DJI: Not Ready — Retry…"
+	case nativeDJIHelp = "Quit Karabiner-Elements and allow Input Monitoring for SpeekCoding. Native DJI suppresses only the DJI volume-up button while active. Disabling this mode restores the prior mapping."
+	case nativeDJIRestore = "DJI mapping needs attention"
 	case nativeFn = "Native Fn trigger (experimental)"
 	case nativeFnUnavailable = "Native Fn: Not Listening — Retry…"
-	case nativeFnHelp = "Quit Karabiner-Elements before using native Fn. Allow Input Monitoring for SpeekCoding. Set the macOS Fn/Globe action to Do Nothing to avoid opening the input switcher or emoji panel. DJI still requires Karabiner."
+	case nativeFnHelp = "Quit Karabiner-Elements before using native Fn. Allow Input Monitoring for SpeekCoding. Set the macOS Fn/Globe action to Do Nothing to avoid opening the input switcher or emoji panel. The DJI button has a separate native mode."
 	case inputMonitoringStatus = "Input Monitoring: %@…"
 	case nativeFnFailed = "Could Not Start Native Fn"
 	case karabinerDownloading = "Karabiner-Elements: Downloading Installer…"
@@ -322,9 +327,13 @@ private enum MenuText: String, CaseIterable {
 		case .eventPostingRequired: return ("需要允许模拟按键", "需要允許模擬按鍵")
 		case .deliveryStatus: return ("自动粘贴和发送：%@…", "自動貼上與傳送：%@…")
 		case .deliveryHelp: return ("转写文字先复制到剪贴板，再自动粘贴；发送模式还会按回车。仅复制到剪贴板无需此权限。", "轉寫文字先複製到剪貼簿，再自動貼上；傳送模式還會按 Return。僅複製到剪貼簿無需此權限。")
+		case .nativeDJI: return ("原生 DJI 按钮（实验性）", "原生 DJI 按鈕（實驗性）")
+		case .nativeDJIWaiting: return ("原生 DJI：未就绪，点击重试…", "原生 DJI：未就緒，點按重試…")
+		case .nativeDJIHelp: return ("请退出 Karabiner-Elements，并为 SpeekCoding 允许输入监控。启用时只屏蔽 DJI 按钮的音量加事件；关闭时恢复原映射。", "請結束 Karabiner-Elements，並為 SpeekCoding 允許輸入監控。啟用時只屏蔽 DJI 按鈕的音量加事件；關閉時還原原映射。")
+		case .nativeDJIRestore: return ("DJI 映射需要检查", "DJI 映射需要檢查")
 		case .nativeFn: return ("原生 Fn 触发（实验性）", "原生 Fn 觸發（實驗性）")
 		case .nativeFnUnavailable: return ("原生 Fn：未监听，点击重试…", "原生 Fn：未監聽，點按重試…")
-		case .nativeFnHelp: return ("使用原生 Fn 前请退出 Karabiner-Elements，并为 SpeekCoding 允许输入监控。在 macOS 键盘设置中将 Fn/地球仪操作设为不执行任何操作，避免切换输入法或弹出表情面板。DJI 按钮仍需要 Karabiner。", "使用原生 Fn 前請結束 Karabiner-Elements，並為 SpeekCoding 允許輸入監控。在 macOS 鍵盤設定中將 Fn/地球儀操作設為不執行任何操作，避免切換輸入法或彈出表情面板。DJI 按鈕仍需要 Karabiner。")
+		case .nativeFnHelp: return ("使用原生 Fn 前请退出 Karabiner-Elements，并为 SpeekCoding 允许输入监控。在 macOS 键盘设置中将 Fn/地球仪操作设为不执行任何操作，避免切换输入法或弹出表情面板。DJI 按钮有单独的原生模式开关。", "使用原生 Fn 前請結束 Karabiner-Elements，並為 SpeekCoding 允許輸入監控。在 macOS 鍵盤設定中將 Fn/地球儀操作設為不執行任何操作，避免切換輸入法或彈出表情面板。DJI 按鈕有獨立的原生模式開關。")
 		case .inputMonitoringStatus: return ("输入监控：%@…", "輸入監控：%@…")
 		case .nativeFnFailed: return ("无法启动原生 Fn", "無法啟動原生 Fn")
 		case .karabinerDownloading: return ("Karabiner-Elements：正在下载安装包…", "Karabiner-Elements：正在下載安裝程式…")
@@ -1271,6 +1280,7 @@ private final class SpeekAgent: @unchecked Sendable {
 
 	private func statusData() -> JSONObject {
 		var result = pingData()
+		result["nativeDJIEnabled"] = UserDefaults.standard.bool(forKey: nativeDJIPreference)
 		result["nativeFnEnabled"] = UserDefaults.standard.bool(forKey: nativeFnPreference)
 		result["inputMonitoring"] = CGPreflightListenEventAccess()
 		result["sessionId"] = sessionID ?? NSNull()
@@ -1338,8 +1348,9 @@ private final class SpeekAgent: @unchecked Sendable {
 	private func handleToggle(_ request: JSONObject, command: String, completion: @escaping AgentCompletion) {
 		// Native Fn owns the gesture while enabled. Ignore the managed legacy Fn
 		// command so an upstream remapper cannot toggle recording twice.
-		if UserDefaults.standard.bool(forKey: nativeFnPreference), stringValue(request["source"]) == "fn" {
-			completion(success(command: command, data: ["ignored": "native_fn_enabled"]))
+		if (UserDefaults.standard.bool(forKey: nativeFnPreference) && stringValue(request["source"]) == "fn") ||
+			(UserDefaults.standard.bool(forKey: nativeDJIPreference) && stringValue(request["source"]) == "dji") {
+			completion(success(command: command, data: ["ignored": "native_trigger_enabled"]))
 			return
 		}
 		switch state {
@@ -2236,6 +2247,8 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 	private let localASR = LocalASRLifecycle()
 	private var agentStarted = false
 	private var statusItem: NSStatusItem?
+	private var nativeDJIInput: DJINativeInput?
+	private var nativeDJIMessage: String?
 	private var nativeFnObserver: FnObserver?
 	private var nativeFnTimer: Timer?
 	private var downloadingKarabiner = false
@@ -2264,7 +2277,12 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 			agentStarted = true
 			localASR.start()
 			reconcileNativeFn()
-			let timer = Timer(timeInterval: 2, repeats: true) { [weak self] _ in self?.reconcileNativeFn() }
+			if !UserDefaults.standard.bool(forKey: nativeDJIPreference) {
+				do { for warning in try DJINativeInput.recoverMappings() { NSLog("SpeekCoding DJI recovery: %@", warning) } }
+				catch { NSLog("SpeekCoding DJI recovery unavailable: %@", String(describing: error)) }
+			}
+			reconcileNativeDJI()
+			let timer = Timer(timeInterval: 2, repeats: true) { [weak self] _ in self?.reconcileNativeFn(); self?.reconcileNativeDJI() }
 			RunLoop.main.add(timer, forMode: .common)
 			nativeFnTimer = timer
 		} catch {
@@ -2322,6 +2340,17 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 		if nativeFn.state == .on && nativeFnObserver?.isRunning != true {
 			let retry = NSMenuItem(title: menuText(.nativeFnUnavailable), action: #selector(retryNativeFn), keyEquivalent: "")
 			retry.target = self
+			menu.addItem(retry)
+		}
+		let nativeDJI = NSMenuItem(title: menuText(.nativeDJI), action: #selector(toggleNativeDJI(_:)), keyEquivalent: "")
+		nativeDJI.target = self
+		nativeDJI.state = UserDefaults.standard.bool(forKey: nativeDJIPreference) ? .on : .off
+		nativeDJI.toolTip = menuText(.nativeDJIHelp)
+		menu.addItem(nativeDJI)
+		if nativeDJI.state == .on && (nativeDJIInput?.readyDeviceIDs.isEmpty ?? true) {
+			let retry = NSMenuItem(title: menuText(.nativeDJIWaiting), action: #selector(retryNativeDJI), keyEquivalent: "")
+			retry.target = self
+			retry.toolTip = nativeDJIMessage
 			menu.addItem(retry)
 		}
 		addModelMenu(to: menu, config: config)
@@ -2421,6 +2450,63 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 	@objc private func openAccessibilityPermission() {
 		if !CGPreflightPostEventAccess() { _ = CGRequestPostEventAccess() }
 		openPrivacySettings("Privacy_Accessibility")
+	}
+
+	private func stopNativeDJI() -> [String] {
+		let warnings = nativeDJIInput?.stop() ?? []
+		nativeDJIInput = nil
+		for warning in warnings { NSLog("SpeekCoding DJI restore: %@", warning) }
+		return warnings
+	}
+	private func reconcileNativeDJI() {
+		guard UserDefaults.standard.bool(forKey: nativeDJIPreference), CGPreflightListenEventAccess() else {
+			_ = stopNativeDJI()
+			return
+		}
+		guard nativeDJIInput?.isRunning != true else { return }
+		_ = stopNativeDJI()
+		do {
+			let input = try DJINativeInput(diagnostic: { [weak self] message in
+				self?.nativeDJIMessage = message
+				NSLog("SpeekCoding DJI: %@", message)
+			}) {
+				guard UserDefaults.standard.bool(forKey: nativeDJIPreference), CGPreflightListenEventAccess() else { return }
+				SpeekAgent.shared.handle(["command": "toggle", "source": "native-dji"]) { response in
+					if !(response["ok"] as? Bool ?? false) { NSLog("SpeekCoding: native DJI command failed") }
+				}
+			}
+			try input.start()
+			nativeDJIInput = input
+		} catch {
+			let message = String(describing: error)
+			if nativeDJIMessage != message { NSLog("SpeekCoding DJI unavailable: %@", message) }
+			nativeDJIMessage = message
+		}
+	}
+	@objc private func toggleNativeDJI(_ sender: NSMenuItem) {
+		let enabled = sender.state != .on
+		if enabled {
+			let guide = NSAlert()
+			guide.messageText = menuText(.nativeDJI)
+			guide.informativeText = menuText(.nativeDJIHelp)
+			guide.runModal()
+			if !CGPreflightListenEventAccess() { openInputMonitoringPermission() }
+		}
+		UserDefaults.standard.set(enabled, forKey: nativeDJIPreference)
+		if !enabled {
+			let warnings = stopNativeDJI()
+			if !warnings.isEmpty {
+				let alert = NSAlert()
+				alert.messageText = menuText(.nativeDJIRestore)
+				alert.informativeText = warnings.joined(separator: "\n")
+				alert.runModal()
+			}
+		} else { reconcileNativeDJI() }
+	}
+	@objc private func retryNativeDJI() {
+		_ = stopNativeDJI()
+		if !CGPreflightListenEventAccess() { openInputMonitoringPermission() }
+		reconcileNativeDJI()
 	}
 
 	private func reconcileNativeFn() {
@@ -2662,6 +2748,7 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 	}
 
 	func applicationWillTerminate(_ notification: Notification) {
+		_ = stopNativeDJI()
 		nativeFnTimer?.invalidate()
 		nativeFnObserver?.stop()
 		nativeFnObserver = nil

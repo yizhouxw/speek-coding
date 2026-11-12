@@ -3,14 +3,14 @@ import Foundation
 /// Pure planning layer: never changes a device or system property.
 public enum DJIMapping {
     public static let volumeIncrement: UInt64 = (0x0c << 32) | 0xe9
-    public struct Entry: Equatable {
+    public struct Entry: Equatable, Codable {
         public let source: UInt64
         public let destination: UInt64
         public init(source: UInt64, destination: UInt64) {
             self.source = source; self.destination = destination
         }
     }
-    public struct Service {
+    public struct Service: Equatable, Codable {
         public let registryID: UInt64
         public let vendorID: Int
         public let productID: Int
@@ -27,11 +27,13 @@ public enum DJIMapping {
         public let registryID: UInt64
         public let original: [Entry]
         public let installed: [Entry]
-        /// Restore only if nobody changed the mapping since installation. A new
-        /// registry ID after reconnect is a new service, never an old lease.
+        /// Remove only our inserted suppression. Preserve edits to unrelated
+        /// mappings; a new registry ID is never an old lease.
         public func restoration(registryID: UInt64, current: [Entry]) -> [Entry]? {
-            guard registryID == self.registryID, current == installed, original != installed else { return nil }
-            return original
+            guard registryID == self.registryID, original != installed else { return nil }
+            let target = current.filter { $0.source == DJIMapping.volumeIncrement }
+            guard target.count == 1, target[0].destination == 0 else { return nil }
+            return current.filter { $0.source != DJIMapping.volumeIncrement }
         }
     }
     public static func plan(service: Service, existing: [Entry]) throws -> Plan {

@@ -20,7 +20,7 @@ swiftc scripts/speek-hud.swift -O -o "$TMP_DIR/speek-hud-validate"
 bash -n scripts/build-native-app.sh
 scripts/build-native-app.sh "$TMP_DIR/speek-coding-app-validate"
 # Explicitly sign the temporary executable before macOS validates it on launch.
-/usr/bin/codesign --force --sign - "$TMP_DIR/speek-coding-app-validate"
+/usr/bin/codesign --force --sign "${SPEEK_VALIDATION_CODESIGN_IDENTITY:--}" "$TMP_DIR/speek-coding-app-validate"
 /usr/bin/codesign --verify --strict "$TMP_DIR/speek-coding-app-validate"
 "$TMP_DIR/speek-coding-app-validate" --localization-self-test
 "$TMP_DIR/speek-coding-app-validate" --license-self-test licenses/LICENSES.txt

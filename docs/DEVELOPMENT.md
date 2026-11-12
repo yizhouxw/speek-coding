@@ -2,7 +2,7 @@
 
 源码构建、测试和贡献流程见 [CONTRIBUTING.md](../CONTRIBUTING.md)；架构和发布流程分别见 [ARCHITECTURE.md](ARCHITECTURE.md) 和 [RELEASING.md](RELEASING.md)。
 
-`NativeInput/` 已纳入 `npm test`，通过 `scripts/build-native-app.sh` 静态链接进源码安装和安装包。App 提供默认关闭的实验性原生 Fn 模式；DJI 和首次配置仍沿用 Karabiner。接口、诊断命令、权限边界与硬件验证限制见 [NATIVE_INPUT_EXPERIMENT.md](NATIVE_INPUT_EXPERIMENT.md)。
+`NativeInput/` 已纳入 `npm test`，通过 `scripts/build-native-app.sh` 静态链接进源码安装和安装包。App 提供默认关闭的实验性原生 Fn 和 DJI 模式；首次配置仍沿用 Karabiner。接口、诊断命令、权限边界与硬件验证限制见 [NATIVE_INPUT_EXPERIMENT.md](NATIVE_INPUT_EXPERIMENT.md)。
 
 ## 产品身份与签名
 

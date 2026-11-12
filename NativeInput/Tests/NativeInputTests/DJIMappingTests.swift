@@ -16,7 +16,7 @@ final class DJIMappingTests: XCTestCase {
         XCTAssertEqual(plan.installed, original + [.init(source: DJIMapping.volumeIncrement, destination: 0)])
         XCTAssertEqual(plan.restoration(registryID: 123, current: plan.installed), original)
         XCTAssertNil(plan.restoration(registryID: 124, current: plan.installed))
-        XCTAssertNil(plan.restoration(registryID: 123, current: plan.installed + [.init(source: 1, destination: 2)]))
+        XCTAssertEqual(plan.restoration(registryID: 123, current: plan.installed + [.init(source: 1, destination: 2)]), original + [.init(source: 1, destination: 2)])
     }
     func testUserMappingConflictIsNeverOverwritten() {
         XCTAssertThrowsError(try DJIMapping.plan(service: service(), existing: [.init(source: DJIMapping.volumeIncrement, destination: 99)]))
