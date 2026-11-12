@@ -1,0 +1,49 @@
+CHANGELOG.md
+  s_d1acf170903776::t_9a82b3e27b8d4c 7-8
+NativeInput/Package.swift
+  s_d1acf170903776::t_67413edc8ae76e 8-9,12
+NativeInput/Sources/DJIDiagnostics/main.swift
+  s_d1acf170903776::t_cdcea4108d9150 1-50
+NativeInput/Sources/NativeInput/DJIMapping.swift
+  s_d1acf170903776::t_364e39b4ad71be 6,13,30-31,33-36
+NativeInput/Sources/NativeInput/DJIMappingLease.swift
+  s_d1acf170903776::t_548b55ae8eaf50 1-120
+NativeInput/Sources/NativeInput/DJINativeInput.swift
+  s_d1acf170903776::t_5ed14d10680896 1-134
+NativeInput/Sources/NativeInput/DJIServiceMapping.swift
+  s_d1acf170903776::t_615fb69490f15c 1-98
+NativeInput/Sources/NativeInput/NativeInput.swift
+  s_d1acf170903776::t_55884f2fbd850f 12-13,15,17-18,26-28,30-32,35-36,38-41,43-63,65-68,72-82,87-91,93
+NativeInput/Tests/NativeInputTests/DJIIntegrationTests.swift
+  s_d1acf170903776::t_48f2715f4b8c4d 1-164
+NativeInput/Tests/NativeInputTests/DJIMappingTests.swift
+  s_d1acf170903776::t_3cd642c7496a4e 19
+docs/DEVELOPMENT.md
+  s_d1acf170903776::t_6d71fb60317cf8 5
+docs/FEATURE_SPEC.md
+  s_d1acf170903776::t_3fd831cdfa2f82 10
+docs/NATIVE_INPUT_EXPERIMENT.md
+  s_d1acf170903776::t_27e6092f7a2cc1 3,14,20,30,38,57,59,63,66-94
+docs/USAGE.zh-CN.md
+  s_d1acf170903776::t_82636aed90c1c6 194-196
+scripts/speek-coding-app.swift
+  s_d1acf170903776::t_393d07c90dc1e3 21,265-268,271,330-333,336,1283,1351-1353,2250-2251,2280-2285,2345-2355,2455-2511,2751
+scripts/validate.sh
+  s_d1acf170903776::t_6e9a9662ff561c 23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "31c8baa0df7fdeb4ca3615a1eead55116905936f",
+  "prompts": {},
+  "sessions": {
+    "s_d1acf170903776": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1ce5e-ec74-7d63-93d0-e7b3d20f393d",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "yizhouxw <54161870+yizhouxw@users.noreply.github.com>"
+    }
+  }
+}
