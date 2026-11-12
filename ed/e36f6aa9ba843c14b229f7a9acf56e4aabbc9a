@@ -1,0 +1,51 @@
+CHANGELOG.md
+  s_d1acf170903776::t_5e3e89b4d074d4 7-13
+README.md
+  s_d1acf170903776::t_b117e4d06f490f 17,23,26,75
+README.zh-CN.md
+  s_d1acf170903776::t_76eb9e5b012975 17,23,26,77
+cli/index.mjs
+  s_d1acf170903776::t_ec4051f489bbd4 455-456,857,902,911,926,932
+cli/lib/actions.mjs
+  s_d1acf170903776::t_feaedc54d3471c 163,236,656,661,664-676,698,763,902,904,921
+cli/lib/install-permissions.mjs
+  s_d1acf170903776::t_bebb6a548a573b 8,16
+cli/lib/permissions.mjs
+  s_d1acf170903776::t_c6e719fe596708 42-46
+cli/lib/runtime.mjs
+  s_d1acf170903776::t_6aa39fc70293ae 40
+docs/DEVELOPMENT.md
+  s_d1acf170903776::t_b346ff5ce51319 5
+docs/FEATURE_SPEC.md
+  s_d1acf170903776::t_af2a3026f4b7ab 10,37
+docs/NATIVE_INPUT_EXPERIMENT.md
+  s_d1acf170903776::t_57a099702f50de 1-4
+docs/USAGE.zh-CN.md
+  s_d1acf170903776::t_428730aca7fe76 11,20,41,176,194,196-204
+package-lock.json
+  s_d1acf170903776::t_3656c334c571c6 3,9
+package.json
+  s_d1acf170903776::t_3a9fa30635360d 3
+scripts/package-smoke-test.sh
+  s_d1acf170903776::t_e1ad4c2197689f 19,24
+scripts/smoke-test.sh
+  s_d1acf170903776::t_f3e583956d9dc5 8,11,25-26
+scripts/speek-coding-app.swift
+  s_d1acf170903776::t_280bffa81c9d8f 265,269,330,334,488,1332,1339,2262,2396
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "ede36f6aa9ba843c14b229f7a9acf56e4aabbc9a",
+  "prompts": {},
+  "sessions": {
+    "s_d1acf170903776": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1ce5e-ec74-7d63-93d0-e7b3d20f393d",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "yizhouxw <54161870+yizhouxw@users.noreply.github.com>"
+    }
+  }
+}
