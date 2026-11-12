@@ -326,26 +326,9 @@ async function installSpeekCodingApp(runtime) {
 	const executablePath = path.join(macosDir, 'SpeekCoding');
 	await fs.rm(stagingPath, { recursive: true, force: true });
 	await fs.mkdir(macosDir, { recursive: true });
-	await execFile(
-		runtime.swiftcPath,
-		[
-			runtime.speekCodingAppSourcePath,
-			'-O',
-			'-o',
-			executablePath,
-			'-framework',
-			'AppKit',
-			'-framework',
-			'AVFoundation',
-			'-framework',
-			'ApplicationServices',
-			'-framework',
-			'CoreAudio',
-			'-framework',
-			'CoreGraphics',
-		],
-		{ env: runtime.env },
-	);
+	await execFile('/bin/bash', [path.join(runtime.repoRoot, 'scripts', 'build-native-app.sh'), executablePath], {
+		env: { ...runtime.env, SWIFTC_BIN: runtime.swiftcPath },
+	});
 	await fs.chmod(executablePath, 0o755);
 	const plist = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

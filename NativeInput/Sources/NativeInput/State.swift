@@ -17,16 +17,19 @@ public struct ButtonTracker<ID: Hashable> {
 public struct FnTracker {
     private var down = false
     private var chord = false
+    private var pressedAt: TimeInterval = 0
+    public var isPressed: Bool { down }
     public init() {}
-    public mutating func fnChanged(isDown: Bool, otherModifiers: Bool) -> Bool {
+    public mutating func fnChanged(isDown: Bool, otherModifiers: Bool, timestamp: TimeInterval = ProcessInfo.processInfo.systemUptime) -> Bool {
         if isDown {
-            if !down { down = true; chord = otherModifiers }
+            if !down { down = true; chord = otherModifiers; pressedAt = timestamp }
             else if otherModifiers { chord = true }
             return false
         }
         guard down else { return false }
         down = false
-        let tapped = !chord && !otherModifiers
+        let elapsed = timestamp - pressedAt
+        let tapped = !chord && !otherModifiers && elapsed >= 0 && elapsed <= 1
         chord = false
         return tapped
     }

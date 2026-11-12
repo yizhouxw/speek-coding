@@ -14,7 +14,7 @@ SpeekCoding 是 macOS 上的本地语音输入工具。在 Codex、Claude Code�
 - **本地智能纠错。** Apple Silicon 的本地 Qwen 引擎可使用小型 Chat 模型理解上下文，整理停顿、断句和识别错误。在“功能设置 → 智能纠错”中开关；“模型管理”分别下载、选择语音识别与文本生成模型。
 - **语音留在本机。** 默认使用本地模型，无需 ASR API Key 或云端转写订阅；模型下载完成后，本地转写可离线使用。
 - **融入已有工具。** 口述编程需求、描述 Bug、回复消息，在支持粘贴的输入框中使用。可选粘贴并发送、只粘贴或仅复制到剪贴板。
-- **随手触发，保持思路。** 单独轻按 Fn 开始和结束，也可用 DJI Mic Mini 发射器按钮控制；Fn 组合键保留原有行为。全局触发由 Karabiner-Elements 提供。
+- **随手触发，保持思路。** 单独轻按 Fn 开始和结束，也可用 DJI Mic Mini 发射器按钮控制；Fn 组合键保留原有行为。默认全局触发由 Karabiner-Elements 提供；当前源码另提供[实验性原生 Fn 模式](docs/NATIVE_INPUT_EXPERIMENT.md)，尚未随 Release 发布。
 - **适配 Apple Silicon，也支持 Intel。** Apple Silicon 使用 Qwen3-ASR-0.6B 的 4-bit 权重与 MLX 加速；Intel 使用本地 faster-whisper，结束录音后转写。
 - **原生菜单栏体验。** 麦克风选择、录音反馈、取消操作，以及简体中文、繁體中文和英语界面。安装包自带运行时，用户无需安装 Node.js、Python、Homebrew 或 Xcode。
 

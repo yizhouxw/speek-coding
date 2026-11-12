@@ -161,15 +161,8 @@ PATH=/usr/bin:/bin "$BUNDLED_PYTHON" -m pip install \
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSION" "$CONTENTS/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :LSMinimumSystemVersion $MACOS_TARGET" "$CONTENTS/Info.plist"
 
-/usr/bin/swiftc scripts/speek-coding-app.swift \
-	-O \
-	-target "$TARGET_ARCH-apple-macosx$MACOS_TARGET" \
-	-o "$CONTENTS/MacOS/SpeekCoding" \
-	-framework AppKit \
-	-framework AVFoundation \
-	-framework ApplicationServices \
-	-framework CoreAudio \
-	-framework CoreGraphics
+scripts/build-native-app.sh "$CONTENTS/MacOS/SpeekCoding" \
+	-target "$TARGET_ARCH-apple-macosx$MACOS_TARGET"
 /usr/bin/swiftc scripts/speek-hud.swift \
 	-O \
 	-target "$TARGET_ARCH-apple-macosx$MACOS_TARGET" \

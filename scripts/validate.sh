@@ -17,12 +17,11 @@ bash -n scripts/speek-package-launcher.sh
 PYTHONPYCACHEPREFIX="$TMP_DIR/pycache" python3 -m py_compile scripts/local-asr-server.py scripts/generate-license-notices.py
 swiftc scripts/speek-hud.swift -O -o "$TMP_DIR/speek-hud-validate"
 "$TMP_DIR/speek-hud-validate" --layout-self-test
-swiftc scripts/speek-coding-app.swift -O -o "$TMP_DIR/speek-coding-app-validate" \
-	-framework AppKit \
-	-framework AVFoundation \
-	-framework ApplicationServices \
-	-framework CoreAudio \
-	-framework CoreGraphics
+bash -n scripts/build-native-app.sh
+scripts/build-native-app.sh "$TMP_DIR/speek-coding-app-validate"
+# Explicitly sign the temporary executable before macOS validates it on launch.
+/usr/bin/codesign --force --sign - "$TMP_DIR/speek-coding-app-validate"
+/usr/bin/codesign --verify --strict "$TMP_DIR/speek-coding-app-validate"
 "$TMP_DIR/speek-coding-app-validate" --localization-self-test
 "$TMP_DIR/speek-coding-app-validate" --license-self-test licenses/LICENSES.txt
 python3 -B test/qwen-streaming.py --native-client "$TMP_DIR/speek-coding-app-validate"

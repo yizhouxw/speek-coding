@@ -4,6 +4,8 @@ Public releases follow [Semantic Versioning](https://semver.org/). Version numbe
 
 ## [Unreleased]
 
+- Add an opt-in native Fn trigger in the app, with Input Monitoring guidance, permission recovery, legacy Fn command deduplication, and cancellation for chords/long presses. Statically link NativeInput in source and package builds; add a content-free Fn diagnostic executable. DJI and first-time CLI setup still use Karabiner.
+
 - After a successful update, remove verified old application copies and stale Launch Services registrations while retaining downloaded models and active Python environments.
 
 - Preserve the application icon in source-based installations and updates.

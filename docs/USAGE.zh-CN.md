@@ -188,3 +188,7 @@ speek uninstall
 `speek update` 在新 App 启动检查通过、配置保存后，自动清理 Applications 目录中的旧 SpeekCoding 安装和项目生成的旧打包 App，并注销本应用的残留 Launch Services 记录，避免搜索中出现重复图标。只处理 bundle identifier 为 `com.speek.coding` 的应用；运行中的旧 App 会保留并报告，退出后再次更新即可清理。清理失败不会回滚已成功安装的新版本，详情见输出的 `appCleanup.warnings`。
 
 模型下载缓存独立于 App，默认位于 `~/.cache/huggingface/hub`，升级时保留，不需要重新下载。配置、当前 Python 环境及通过 Hugging Face 环境变量指定的模型缓存路径也会受到保护。
+
+## 原生 Fn（当前源码，尚未发布）
+
+已完成初始配置的用户可在新构建 App 的“功能设置”中启用“原生 Fn 触发（实验性）”，退出 Karabiner，并为 SpeekCoding 授予输入监控权限。将 macOS 的 Fn/地球仪操作设为“不执行任何操作”。单击在 1 秒内释放时触发，组合键与长按不触发。菜单提供监听失败后的重试入口；关闭开关并重新打开 Karabiner 可回到旧工作流。DJI 按钮和首次 CLI 配置仍依赖 Karabiner。详见[验证记录与迁移限制](NATIVE_INPUT_EXPERIMENT.md)。

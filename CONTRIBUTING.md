@@ -30,7 +30,7 @@ npm test
 
 确认 `python3 --version` 是 Python 3.12；如果系统默认版本不同，请先将 Python 3.12 的可执行文件目录放到 `PATH` 前部。仅设置 `PYTHON3_BIN` 不会改变测试调用的 `python3`。
 
-`npm test` 会运行 Node.js 单元测试、JavaScript/Shell/Python 语法检查、Karabiner JSON 校验、独立 `NativeInput` Swift Package 的状态机测试，并把 `scripts/speek-coding-app.swift` 和 HUD 编译为临时 Mach-O 产物。原生 App 变更必须在支持对应 macOS frameworks 的机器上验证。
+`npm test` 会运行 Node.js 单元测试、JavaScript/Shell/Python 语法检查、Karabiner JSON 校验、`NativeInput` Swift Package 的状态机和事件回放测试，并把 `scripts/speek-coding-app.swift` 和 HUD 编译为临时 Mach-O 产物。原生 App 变更必须在支持对应 macOS frameworks 的机器上验证。
 
 要在开发 Mac 上安装源码版，请先安装并打开 Karabiner-Elements，再运行：
 

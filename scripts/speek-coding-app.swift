@@ -8,6 +8,7 @@ import CoreAudio
 import CoreGraphics
 import Darwin
 import Foundation
+import NativeInput
 
 // SpeekCoding's native, permission-bearing agent.  The surrounding installer
 // compiles this source into SpeekCoding.app and supplies its Info.plist.  Keep
@@ -16,6 +17,7 @@ import Foundation
 
 private let agentName = "SpeekCoding"
 private let agentBundleIdentifier = "com.speek.coding"
+private let nativeFnPreference = "nativeFnEnabled"
 private let protocolVersion = 1
 private let stateDirectoryURL = URL(fileURLWithPath: "/tmp/speek-coding-\(geteuid())", isDirectory: true)
 private let socketURL = stateDirectoryURL.appendingPathComponent("agent.sock")
@@ -259,10 +261,15 @@ private enum MenuText: String, CaseIterable {
 	case eventPostingRequired = "Allow Simulated Keystrokes"
 	case deliveryStatus = "Automatic Paste and Send: %@…"
 	case deliveryHelp = "Copy transcription to the clipboard, then paste it automatically. Auto-send also presses Return. Clipboard-only mode does not require this permission."
+	case nativeFn = "Native Fn trigger (experimental)"
+	case nativeFnUnavailable = "Native Fn: Not Listening — Retry…"
+	case nativeFnHelp = "Quit Karabiner-Elements before using native Fn. Allow Input Monitoring for SpeekCoding. Set the macOS Fn/Globe action to Do Nothing to avoid opening the input switcher or emoji panel. DJI still requires Karabiner."
+	case inputMonitoringStatus = "Input Monitoring: %@…"
+	case nativeFnFailed = "Could Not Start Native Fn"
 	case karabinerDownloading = "Karabiner-Elements: Downloading Installer…"
 	case karabinerInstalled = "Karabiner-Elements: Installed (Open Settings)…"
 	case karabinerMissing = "Karabiner-Elements: Not Installed (Download)…"
-	case karabinerHelp = "Global shortcuts and the DJI Mic button require Karabiner-Elements"
+	case karabinerHelp = "Legacy Fn triggers and the DJI Mic button use Karabiner-Elements"
 	case quit = "Quit SpeekCoding"
 	case license = "License…"
 	case licenseTitle = "Licenses and Open-source Notices"
@@ -315,10 +322,15 @@ private enum MenuText: String, CaseIterable {
 		case .eventPostingRequired: return ("需要允许模拟按键", "需要允許模擬按鍵")
 		case .deliveryStatus: return ("自动粘贴和发送：%@…", "自動貼上與傳送：%@…")
 		case .deliveryHelp: return ("转写文字先复制到剪贴板，再自动粘贴；发送模式还会按回车。仅复制到剪贴板无需此权限。", "轉寫文字先複製到剪貼簿，再自動貼上；傳送模式還會按 Return。僅複製到剪貼簿無需此權限。")
+		case .nativeFn: return ("原生 Fn 触发（实验性）", "原生 Fn 觸發（實驗性）")
+		case .nativeFnUnavailable: return ("原生 Fn：未监听，点击重试…", "原生 Fn：未監聽，點按重試…")
+		case .nativeFnHelp: return ("使用原生 Fn 前请退出 Karabiner-Elements，并为 SpeekCoding 允许输入监控。在 macOS 键盘设置中将 Fn/地球仪操作设为不执行任何操作，避免切换输入法或弹出表情面板。DJI 按钮仍需要 Karabiner。", "使用原生 Fn 前請結束 Karabiner-Elements，並為 SpeekCoding 允許輸入監控。在 macOS 鍵盤設定中將 Fn/地球儀操作設為不執行任何操作，避免切換輸入法或彈出表情面板。DJI 按鈕仍需要 Karabiner。")
+		case .inputMonitoringStatus: return ("输入监控：%@…", "輸入監控：%@…")
+		case .nativeFnFailed: return ("无法启动原生 Fn", "無法啟動原生 Fn")
 		case .karabinerDownloading: return ("Karabiner-Elements：正在下载安装包…", "Karabiner-Elements：正在下載安裝程式…")
 		case .karabinerInstalled: return ("Karabiner-Elements：已安装（打开设置）…", "Karabiner-Elements：已安裝（開啟設定）…")
 		case .karabinerMissing: return ("Karabiner-Elements：未安装（下载安装）…", "Karabiner-Elements：未安裝（下載安裝）…")
-		case .karabinerHelp: return ("全局按键和 DJI Mic 按钮需要 Karabiner-Elements", "全域快捷鍵與 DJI Mic 按鈕需要 Karabiner-Elements")
+		case .karabinerHelp: return ("传统 Fn 触发和 DJI Mic 按钮使用 Karabiner-Elements", "傳統 Fn 觸發與 DJI Mic 按鈕使用 Karabiner-Elements")
 		case .quit: return ("退出 SpeekCoding", "結束 SpeekCoding")
 		case .license: return ("License（许可证）…", "License（授權條款）…")
 		case .licenseTitle: return ("许可证与开源声明", "授權條款與開源聲明")
@@ -1259,6 +1271,8 @@ private final class SpeekAgent: @unchecked Sendable {
 
 	private func statusData() -> JSONObject {
 		var result = pingData()
+		result["nativeFnEnabled"] = UserDefaults.standard.bool(forKey: nativeFnPreference)
+		result["inputMonitoring"] = CGPreflightListenEventAccess()
 		result["sessionId"] = sessionID ?? NSNull()
 		result["wavPath"] = wavURL?.path ?? NSNull()
 		result["recording"] = state == .recording || state == .testing
@@ -1322,6 +1336,12 @@ private final class SpeekAgent: @unchecked Sendable {
 	}
 
 	private func handleToggle(_ request: JSONObject, command: String, completion: @escaping AgentCompletion) {
+		// Native Fn owns the gesture while enabled. Ignore the managed legacy Fn
+		// command so an upstream remapper cannot toggle recording twice.
+		if UserDefaults.standard.bool(forKey: nativeFnPreference), stringValue(request["source"]) == "fn" {
+			completion(success(command: command, data: ["ignored": "native_fn_enabled"]))
+			return
+		}
 		switch state {
 		case .idle: handleSave(request, command: command, completion: completion)
 		case .recording: handleWatch(request, command: command, completion: completion)
@@ -2216,6 +2236,8 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 	private let localASR = LocalASRLifecycle()
 	private var agentStarted = false
 	private var statusItem: NSStatusItem?
+	private var nativeFnObserver: FnObserver?
+	private var nativeFnTimer: Timer?
 	private var downloadingKarabiner = false
 	private var modelItems: [JSONObject] = []
 	private var modelBusy = false
@@ -2241,6 +2263,10 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 			try socketServer.start()
 			agentStarted = true
 			localASR.start()
+			reconcileNativeFn()
+			let timer = Timer(timeInterval: 2, repeats: true) { [weak self] _ in self?.reconcileNativeFn() }
+			RunLoop.main.add(timer, forMode: .common)
+			nativeFnTimer = timer
 		} catch {
 			FileHandle.standardError.write(Data("SpeekCoding agent failed to start: \(error.localizedDescription)\n".utf8))
 			NSApp.terminate(nil)
@@ -2288,6 +2314,16 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 		correction.isEnabled = config.asrBackend == "qwen-mlx"
 		correction.toolTip = menuText(.correctionHelp)
 		menu.addItem(correction)
+		let nativeFn = NSMenuItem(title: menuText(.nativeFn), action: #selector(toggleNativeFn(_:)), keyEquivalent: "")
+		nativeFn.target = self
+		nativeFn.state = UserDefaults.standard.bool(forKey: nativeFnPreference) ? .on : .off
+		nativeFn.toolTip = menuText(.nativeFnHelp)
+		menu.addItem(nativeFn)
+		if nativeFn.state == .on && nativeFnObserver?.isRunning != true {
+			let retry = NSMenuItem(title: menuText(.nativeFnUnavailable), action: #selector(retryNativeFn), keyEquivalent: "")
+			retry.target = self
+			menu.addItem(retry)
+		}
 		addModelMenu(to: menu, config: config)
 		let languageItem = NSMenuItem(title: menuText(.language), action: nil, keyEquivalent: "")
 		languageItem.toolTip = menuText(.languageHelp)
@@ -2318,6 +2354,10 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 		microphonePermission.target = self
 		microphonePermission.toolTip = menuText(.microphoneHelp)
 		menu.addItem(microphonePermission)
+		let inputMonitoring = NSMenuItem(title: menuText(.inputMonitoringStatus, CGPreflightListenEventAccess() ? menuText(.allowed) : menuText(.clickToAllow)), action: #selector(openInputMonitoringPermission), keyEquivalent: "")
+		inputMonitoring.target = self
+		inputMonitoring.toolTip = menuText(.nativeFnHelp)
+		menu.addItem(inputMonitoring)
 		let canControlApps = AXIsProcessTrusted()
 		let canPostEvents = CGPreflightPostEventAccess()
 		let deliveryPermissionStatus = !canControlApps ? menuText(.accessibilityRequired) : (!canPostEvents ? menuText(.eventPostingRequired) : menuText(.allowed))
@@ -2381,6 +2421,56 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 	@objc private func openAccessibilityPermission() {
 		if !CGPreflightPostEventAccess() { _ = CGRequestPostEventAccess() }
 		openPrivacySettings("Privacy_Accessibility")
+	}
+
+	private func reconcileNativeFn() {
+		guard UserDefaults.standard.bool(forKey: nativeFnPreference), CGPreflightListenEventAccess() else {
+			nativeFnObserver?.stop()
+			nativeFnObserver = nil
+			return
+		}
+		guard nativeFnObserver?.isRunning != true else { return }
+		nativeFnObserver?.stop()
+		nativeFnObserver = nil
+		let observer = FnObserver {
+			guard UserDefaults.standard.bool(forKey: nativeFnPreference), CGPreflightListenEventAccess() else { return }
+			SpeekAgent.shared.handle(["command": "toggle", "source": "native-fn"]) { response in
+				if !(response["ok"] as? Bool ?? false) {
+					NSLog("SpeekCoding: native Fn command failed")
+				}
+			}
+		}
+		do { try observer.start(); nativeFnObserver = observer }
+		catch { NSLog("SpeekCoding: native Fn unavailable: %@", String(describing: error)) }
+	}
+
+	@objc private func toggleNativeFn(_ sender: NSMenuItem) {
+		let enabled = sender.state != .on
+		UserDefaults.standard.set(enabled, forKey: nativeFnPreference)
+		if enabled {
+			let guide = NSAlert()
+			guide.messageText = menuText(.nativeFn)
+			guide.informativeText = menuText(.nativeFnHelp)
+			guide.runModal()
+			if !CGPreflightListenEventAccess() { openInputMonitoringPermission() }
+		}
+		reconcileNativeFn()
+	}
+
+	@objc private func retryNativeFn() {
+		if !CGPreflightListenEventAccess() { openInputMonitoringPermission() }
+		reconcileNativeFn()
+		if nativeFnObserver?.isRunning != true {
+			let alert = NSAlert()
+			alert.messageText = menuText(.nativeFnFailed)
+			alert.informativeText = menuText(.nativeFnHelp)
+			alert.runModal()
+		}
+	}
+
+	@objc private func openInputMonitoringPermission() {
+		if !CGPreflightListenEventAccess() { _ = CGRequestListenEventAccess() }
+		openPrivacySettings("Privacy_ListenEvent")
 	}
 
 	@objc private func openKarabiner() {
@@ -2572,6 +2662,9 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 	}
 
 	func applicationWillTerminate(_ notification: Notification) {
+		nativeFnTimer?.invalidate()
+		nativeFnObserver?.stop()
+		nativeFnObserver = nil
 		socketServer.stop()
 		SpeekAgent.shared.stopForTermination()
 		if agentStarted { localASR.stop() }
