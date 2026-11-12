@@ -1,0 +1,37 @@
+.github/workflows/pages.yml
+  s_d1acf170903776::t_65beeead22299e 5,22-23
+CHANGELOG.md
+  s_d1acf170903776::t_55baf12a6d3e52 7-8
+CHANGELOG.zh-CN.md
+  s_d1acf170903776::t_f5f612c262d38c 1-57
+docs/RELEASING.md
+  s_d1acf170903776::t_cc63ec297b2f5e 81-82
+scripts/build-site.py
+  s_d1acf170903776::t_f3d13b1e30538c 1-44
+website/changelog-zh.html
+  s_d1acf170903776::t_309b7610156128 1-58
+website/changelog.html
+  s_d1acf170903776::t_96830e312c11f4 1-86
+website/index.html
+  s_d1acf170903776::t_14baff47494a4f 2,7
+website/style.css
+  s_d1acf170903776::t_36ed0f04f58822 18
+website/zh.html
+  s_d1acf170903776::t_e6954c534aacb1 2,7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "07579adf33a9af71fd1b2d8d25cfc3471afb45f3",
+  "prompts": {},
+  "sessions": {
+    "s_d1acf170903776": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1ce5e-ec74-7d63-93d0-e7b3d20f393d",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "yizhouxw <54161870+yizhouxw@users.noreply.github.com>"
+    }
+  }
+}
