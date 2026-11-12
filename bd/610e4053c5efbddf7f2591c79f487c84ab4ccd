@@ -1,0 +1,23 @@
+website/index.html
+  s_d1acf170903776::t_d6a18e9c841416 2-3
+website/style.css
+  s_d1acf170903776::t_5a0725bcd16484 2-10
+website/zh.html
+  s_d1acf170903776::t_929b77d96c541f 2-3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "bd610e4053c5efbddf7f2591c79f487c84ab4ccd",
+  "prompts": {},
+  "sessions": {
+    "s_d1acf170903776": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1ce5e-ec74-7d63-93d0-e7b3d20f393d",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "yizhouxw <54161870+yizhouxw@users.noreply.github.com>"
+    }
+  }
+}
