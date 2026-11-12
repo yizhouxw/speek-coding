@@ -1,0 +1,21 @@
+CHANGELOG.md
+  s_d88553965ce385::t_abe6239bec44b2 7-8
+cli/lib/actions.mjs
+  s_d88553965ce385::t_822d8d247c5fd9 371-372,400
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "c6366ada55bf46c03c63324ace6dd04bf1e88a69",
+  "prompts": {},
+  "sessions": {
+    "s_d88553965ce385": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1cdb7-aadc-73a2-bac2-824c7dd21bbe",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "yizhouxw <54161870+yizhouxw@users.noreply.github.com>"
+    }
+  }
+}
