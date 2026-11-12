@@ -1,0 +1,61 @@
+CHANGELOG.md
+  s_d88553965ce385::t_5871a8e3a69d68 7
+README.md
+  s_d88553965ce385::t_03beaf48c5b32c 16
+README.zh-CN.md
+  s_d88553965ce385::t_aab061c54f1dcc 14,59
+cli/lib/actions.mjs
+  s_d88553965ce385::t_86e921db246bf0 560,579
+cli/lib/args.mjs
+  s_d88553965ce385::t_813eb64fab024e 39
+cli/lib/config.mjs
+  s_d88553965ce385::t_0532a17103bc10 17,21,146,221,267
+cli/lib/service.mjs
+  s_d88553965ce385::t_78ccf3dff8af44 115
+docs/DEVELOPMENT.md
+  s_d88553965ce385::t_777b4dbd643c72 32-35
+docs/USAGE.zh-CN.md
+  s_d88553965ce385::t_b9c39abe90f585 126,128-135,138-139,142,176
+licenses/LICENSES.txt
+  s_d88553965ce385::t_5927b7df5b00db 23384-24863
+licenses/catalog.json
+  s_d88553965ce385::t_6f379bedfb7da1 11-26,147-151
+licenses/upstream/sentencepiece-Apache-2.0.txt
+  s_d88553965ce385::t_00be40d1b56dce 1-202
+packaging/requirements-mlx.in
+  s_d88553965ce385::t_ee7f010fd1295f 6
+packaging/requirements-mlx.txt
+  s_d88553965ce385::t_1d294030379ca9 1-6,160-320,347-349,466-612,818-880,884-886,911-916,920-922
+scripts/local-asr-server.py
+  s_d88553965ce385::t_8aaa5dc998d0f9 6,13,48-133,154,180,196,559,605-615,698-744,869-875
+scripts/speek-coding-app.swift
+  s_d88553965ce385::t_9c649d9e1e369f 237-245,293-301,364,448,818-850,1599,1673-1705,2220-2223,2235,2285-2291,2482-2563
+test/config.test.mjs
+  s_d88553965ce385::t_fa97b54e71258b 64,66
+test/correction-quality.json
+  s_d88553965ce385::t_6b9328631dd002 1-7
+test/evaluate-correction.py
+  s_d88553965ce385::t_489e5981f8ac3b 1-24
+test/local-models.py
+  s_d88553965ce385::t_9c116f42652954 1-66
+test/local-models.test.mjs
+  s_d88553965ce385::t_dcf55219021408 1-7
+test/qwen-streaming.py
+  s_d88553965ce385::t_7d8f777d3b6f41 77-88
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "284847dd9c4fa9bf61913f8eaf0e97437cebdffc",
+  "prompts": {},
+  "sessions": {
+    "s_d88553965ce385": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1cdb7-aadc-73a2-bac2-824c7dd21bbe",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "yizhouxw <54161870+yizhouxw@users.noreply.github.com>"
+    }
+  }
+}
