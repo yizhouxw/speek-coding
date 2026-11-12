@@ -72,3 +72,9 @@ shasum -a 256 SpeekCoding-<version>-<arch>.pkg
 - 安装、升级、`speek doctor`、`speek test-record` 和卸载各验证一次，再将版本标记为稳定。
 
 GitHub Release 的常规／预发布标记与 Apple 分发签名是两回事。常规 Release 可以附带明确标为 `-dev-` 的开发安装包，但必须注明签名与公证限制，不能将这些附件描述为已通过 Apple 验证的正式分发包。
+
+## Changelog maintenance
+
+Record user-visible changes under `[Unreleased]` in `CHANGELOG.md` as work lands. Before each release, move those entries into a dated `## [X.Y.Z] - YYYY-MM-DD` section and leave a fresh `[Unreleased]` section. Rewrite superseded development notes to describe the final behavior. Update package.json and package-lock.json to the same version. The release workflow rejects a missing or empty matching changelog section and generates GitHub release notes from it. Do not create a new app version solely for website edits.
+
+The product site lives in `website/`. Changes on master deploy through `.github/workflows/pages.yml` to https://yizhouxw.github.io/speek-coding/.

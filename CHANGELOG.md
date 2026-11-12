@@ -4,6 +4,8 @@ Public releases follow [Semantic Versioning](https://semver.org/). Version numbe
 
 ## [Unreleased]
 
+- Add the GitHub Pages product introduction site.
+
 ## [0.3.0] - 2026-11-12
 
 - Use native Fn and device-scoped DJI HID input by default, without installing Karabiner. Setup migrates owned legacy rules while preserving other remapper settings.
@@ -17,9 +19,9 @@ Public releases follow [Semantic Versioning](https://semver.org/). Version numbe
 
 - Fix unresponsive status menus when enabling native Fn or DJI by removing modal guidance dialogs from the toggle actions.
 
-- Add opt-in native DJI input with device-scoped UserKeyMapping, verified suppression before triggering, normal-exit restoration and crash-recovery records. Add read-only and bounded write/restore diagnostics; physical button/audio validation remains pending.
+- Add native DJI input with device-scoped UserKeyMapping, verified suppression before triggering, normal-exit restoration and crash-recovery records. Add read-only and bounded write/restore diagnostics; physical button/audio validation remains pending.
 
-- Add an opt-in native Fn trigger in the app, with Input Monitoring guidance, permission recovery, legacy Fn command deduplication, and cancellation for chords/long presses. Statically link NativeInput in source and package builds; add a content-free Fn diagnostic executable. DJI and first-time CLI setup still use Karabiner.
+- Add a native Fn trigger in the app, with Input Monitoring guidance, permission recovery, legacy Fn command deduplication, and cancellation for chords/long presses. Statically link NativeInput in source and package builds; add a content-free Fn diagnostic executable. First-time setup uses native input without Karabiner.
 
 - After a successful update, remove verified old application copies and stale Launch Services registrations while retaining downloaded models and active Python environments.
 
