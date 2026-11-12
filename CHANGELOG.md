@@ -4,6 +4,11 @@ Public releases follow [Semantic Versioning](https://semver.org/). Version numbe
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-12
+
+- Packaged apps automatically prepare user configuration, helpers and the local service on first launch and version changes. Add menu progress and retry; no manual setup commands for packaged installs.
+- Redesign installation and upgrade guides around the graphical workflow, with CLI diagnostics kept optional.
+
 - Add bilingual changelog pages directly on the product site.
 
 - Redesign the product site with a midnight-blue palette and clearer action contrast.

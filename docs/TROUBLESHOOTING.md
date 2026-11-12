@@ -6,7 +6,7 @@
 speek status
 ```
 
-输出中的 `next` 是当前最优先动作。需要查看 App 签名、IPC、权限、Karabiner 和 ASR 的完整细节时运行：
+输出中的 `next` 是当前最优先动作。需要查看 App 签名、IPC、权限、原生输入和 ASR 的完整细节时运行：
 
 ```bash
 speek doctor
@@ -24,17 +24,17 @@ speek --version
 codesign --verify --deep --strict "/Applications/SpeekCoding.app"
 ```
 
-确认版本与安装包一致，显示名为 `SpeekCoding`，Bundle ID 为 `com.speek.coding`，且 `codesign` 无错误。安装或升级 `.pkg` 后，运行：
+确认版本与安装包一致，显示名为 `SpeekCoding`，Bundle ID 为 `com.speek.coding`，且 `codesign` 无错误。v0.3.1 起安装包在打开 App 时自动初始化和升级。仅在高级排障时可手动执行：
 
 ```bash
 speek update --yes
 ```
 
-更新会验证系统安装的 App、更新鉴权 IPC 入口和 Karabiner 托管规则，并清理已退役的旧运行时文件；它不会在用户机编译或重签 App。
+更新会验证系统安装的 App、更新原生输入客户端并迁移旧托管规则，并清理已退役的旧运行时文件；它不会在用户机编译或重签 App。
 
 ## App 没有启动或 IPC 不可用
 
-CLI 和 Karabiner 都依赖 `SpeekCoding.app` 中的 agent。先手动启动，再检查状态：
+CLI 依赖 `SpeekCoding.app` 中的 agent。先手动启动，再检查状态：
 
 ```bash
 open -gj "/Applications/SpeekCoding.app"
@@ -63,13 +63,13 @@ ls -l "$HOME/.config/speek-coding/ipc-token"
 
 ## macOS 权限未就绪
 
-SpeekCoding 的录音和自动粘贴权限属于 `SpeekCoding.app`。Karabiner-Elements 的触发权限单独设置：
+SpeekCoding 的录音和自动粘贴权限属于 `SpeekCoding.app`。原生输入权限也属于 SpeekCoding：
 
 - `Privacy & Security → Microphone`：允许 SpeekCoding。
 - `Privacy & Security → Accessibility`：允许 SpeekCoding；这覆盖定向粘贴和 Return 所需的 AX / Event Posting 检查。
-- `Privacy & Security → Input Monitoring`：按 Karabiner-Elements 的提示授权，用于读取 Fn / DJI 触发；它可能还需要其他系统权限。
+- `Privacy & Security → Input Monitoring`：允许 SpeekCoding，用于读取原生 Fn / DJI 触发。
 
-不需要为 SpeekCoding 的录音和粘贴功能授权终端、Python、Shell 或 ASR LaunchAgent。Karabiner-Elements 所需的权限请按照其设置界面提示授予。
+不需要为 SpeekCoding 的录音和粘贴功能授权终端、Python、Shell 或 ASR LaunchAgent。其他映射工具占用输入设备时请退出它们。
 
 先让产品 App 自己发起权限请求：
 

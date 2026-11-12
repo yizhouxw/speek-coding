@@ -7,7 +7,7 @@ CLI: speek trigger / cancel / test-record / permissions
                          │
                          │ authenticated JSON over Unix socket
                          ▼
-Fn / DJI HID ─► Karabiner ─► speek-command ───────────────┐
+Fn / DJI HID ─► NativeInput ─► App ───────────────┐
                                                           │
                                                           ▼
                                                SpeekCoding.app
@@ -59,7 +59,7 @@ App 启动时在配置为本地 ASR 且未使用模拟转写时尝试启动已�
 | 剪贴板写入 | `NSPasteboard` | SpeekCoding |
 | 定向粘贴与 Return | `CGEvent.postToPid` | SpeekCoding |
 
-Karabiner-Elements 独立于产品 App：它读取全局键盘/HID 事件，并可能要求 Input Monitoring、辅助功能、后台服务及驱动扩展等权限，具体以其设置引导为准。CLI、Shell、Python 和 ASR LaunchAgent 不承担 SpeekCoding 的录音或文字交付权限。
+原生 Fn 和 DJI 监听由 App 承担，需要 SpeekCoding 的 Input Monitoring 权限。CLI、Shell、Python 和 ASR LaunchAgent 不承担 SpeekCoding 的录音或文字交付权限。
 
 App 的产品身份固定为：
 
@@ -81,20 +81,20 @@ App 的产品身份固定为：
 
 状态目录权限为 `0700`，socket 和 token 权限为 `0600`。App 还校验连接端与自身属于同一 UID，并要求每个 JSON 请求携带安装时生成的 256-bit 随机 token。请求按行编码，单条上限为 1 MiB。
 
-### Karabiner
+### CLI 与旧版迁移
 
 托管规则不包含录音、转写或事件注入逻辑。它只执行：
 
 ```text
-~/.config/karabiner/scripts/speek-command toggle fn
-~/.config/karabiner/scripts/speek-command toggle dji
+~/.config/speek-coding/bin/speek-command toggle fn
+~/.config/speek-coding/bin/speek-command toggle dji
 ```
 
 `speek-command` 只负责在需要时启动 App、读取 `0600` token，并通过同一个 Unix socket 发送 `toggle`。这使 CLI 与硬件触发共享同一状态机和权限主体。
 
 ### URL Scheme
 
-App 注册 `speekcoding://` 作为可选集成入口。URL 只接受 `toggle` 和 `cancel`，必须携带正确 token；除受限的 `source` 标签外，URL 参数不能覆盖音频、ASR 或交付配置。当前 Karabiner 规则默认使用鉴权 IPC 客户端，不把 token 暴露在规则或 URL 中。
+App 注册 `speekcoding://` 作为可选集成入口。URL 只接受 `toggle` 和 `cancel`，必须携带正确 token；除受限的 `source` 标签外，URL 参数不能覆盖音频、ASR 或交付配置。可选外部集成使用鉴权 IPC 客户端，不把 token 暴露在规则或 URL 中。
 
 ## App 内状态机
 
@@ -117,18 +117,18 @@ idle ── toggle/save ──► starting ──► recording ── toggle/wat
 
 正式发布要求固定的 Developer ID Application 身份签 App、Developer ID Installer 身份签 `.pkg`，并完成公证和 stapling。`speek update` 验证已安装的包内 App 签名，在 manifest 中记录 designated requirement，再协调每用户文件；它不重签或替换包内 App，也不比较发布包与旧 manifest 的签名身份。源码安装路径会检查现有身份是否变化。开发构建在已有 `SpeekCoding Local Code Signing` 身份时默认复用，否则使用 ad-hoc 签名，均不作为正式分发物。
 
-安装/升级顺序保证 Karabiner 不会在 App 就绪前切换到新入口：
+v0.3.1 安装包由 App 启动后的后台准备流程调用内置 CLI，IPC 就绪后才进行初始化；准备期间不启动原生触发。源码安装仍可手动运行 CLI：
 
 1. `.pkg` 把已签名 App、内置运行时和 CLI launcher 安装到系统位置。
-2. `speek setup` 检查 Karabiner，生成或复用 IPC token，准备 IPC 客户端和 HUD。
+2. 内置初始化生成或复用 IPC token，准备 IPC 客户端和 HUD。
 3. 验证已安装 App 的签名、注册 LaunchServices，并通过鉴权 `ping` 检查 Bundle ID 和协议版本。
-4. 写入指向 App 内 Python 的配置和 Karabiner 托管规则，清理旧入口；未跳过 ASR 时，准备并启动本地服务。
+4. 写入指向 App 内 Python 的配置并迁移旧托管规则，清理旧入口；未跳过 ASR 时，准备并启动本地服务。
 
 ## 组件职责
 
 - `scripts/speek-coding-app.swift`：原生 App、权限、录音、ASR HTTP、状态机和定向交付。
 - `cli/lib/agent.mjs`：Node.js 鉴权 IPC 客户端与 App 启动/身份检查。
-- `scripts/speek-command.sh`：Karabiner 使用的最小鉴权 IPC 客户端。
+- `scripts/speek-command.sh`：可选 CLI 使用的最小鉴权 IPC 客户端。
 - `cli/index.mjs`：用户命令编排和交互。
 - `cli/lib/actions.mjs`：源码安装签名、安装、升级、诊断和卸载。
 - `cli/lib/service.mjs`：ASR LaunchAgent 生成、生命周期和健康探测。
@@ -147,8 +147,8 @@ idle ── toggle/save ──► starting ──► recording ── toggle/wat
 | `~/.config/speek-coding/ipc-token` | `0600` IPC 随机凭据 |
 | `/Applications/SpeekCoding.app/Contents/Resources/runtime/python/` | 安装包内的可重定位 ASR Python 环境 |
 | `~/.config/speek-coding/logs/` | ASR 服务日志 |
-| `~/.config/karabiner/scripts/speek-command` | Karabiner IPC 客户端 |
-| `~/.config/karabiner/scripts/speek-hud` | 原生 HUD 可执行文件 |
+| `~/.config/speek-coding/bin/speek-command` | 可选 IPC 客户端 |
+| `~/.config/speek-coding/bin/speek-hud` | 原生 HUD 可执行文件 |
 | `~/Library/LaunchAgents/com.speek.coding.asr.plist` | 本地 ASR LaunchAgent |
 | `~/.config/speek-coding/com.speek.coding.asr.plist` | 无法写登录项时的当前会话 fallback |
 | `/tmp/speek-coding-<uid>/` | socket、会话期临时 WAV 和 HUD 状态；仅当前用户可访问 |

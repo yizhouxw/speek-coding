@@ -22,17 +22,13 @@ SpeekCoding 是 macOS 上的本地语音输入工具。在 Codex、Claude Code�
 
 **准备条件：** Apple Silicon 需要 macOS 14+，Intel 需要 macOS 13+；准备麦克风并授予 SpeekCoding 输入监控权限。
 
-1. **安装应用。** 从 [Releases](https://github.com/yizhouxw/speek-coding/releases/latest) 下载匹配的 `.pkg`：Apple Silicon 选 `arm64`，Intel 选 `x86_64`。安装后，从“应用程序”打开 **SpeekCoding**。
-2. **设置原生触发。** 授予 SpeekCoding 输入监控权限，将 macOS Fn/地球仪操作设为“不执行任何操作”；退出可能占用输入设备的其他映射工具。
-3. **完成首次设置。** 打开终端，运行：
+1. 从 [Releases](https://github.com/yizhouxw/speek-coding/releases/latest) 下载适合芯片架构的 `.pkg`，安装后从“应用程序”打开 **SpeekCoding**。
+2. **从 v0.3.1 起**，App 自动准备用户配置和本地服务。菜单会显示准备进度；失败时点击“准备未完成，点击重试”。安装包用户无需打开终端。
+3. 在菜单中授予麦克风和输入监控权限；自动粘贴还需辅助功能与模拟按键权限。将 macOS Fn／地球仪操作设为“不执行任何操作”，退出占用设备的按键映射工具。
+4. 选择麦克风，在模型管理中准备语音模型。首次下载需要联网，之后复用本地缓存。
+5. 点击目标文本框，**轻按 Fn → 说话 → 再按 Fn**。请先确认自动发送设置是否符合预期。
 
-   ```bash
-   speek setup --trigger-mode keyboard
-   speek doctor
-   ```
-
-4. **选择麦克风并授权。** 在菜单栏选择麦克风，允许 SpeekCoding 使用麦克风；自动粘贴和发送还需要辅助功能与模拟按键权限。
-5. **开始说话。** 点进目标输入框，**按 Fn → 说话 → 再按 Fn**。首次使用需下载并加载模型，后续复用已缓存的权重。
+已有用户：正常退出旧 App，安装新版，再重新打开。版本变化时会自动刷新辅助程序和服务配置，保留设置与模型。源码安装以及 v0.3.0 或更早版本仍使用 CLI 初始化流程。
 
 > 当前带 `-dev-` 的安装包未经过 Developer ID 签名或公证，macOS 可能阻止安装或启动，请先阅读对应发布说明。模型权重单独下载。
 
@@ -48,9 +44,7 @@ speek config --delivery-mode paste_and_send  # 粘贴并发送（默认）
 
 **用无线按钮控制。** 连接 DJI Mic Mini 接收器后，配置发射器按钮：
 
-```bash
-speek setup --trigger-mode keyboard+dji --input-device "DJI Mic Mini"
-```
+在菜单中选择 DJI 麦克风并开启原生 DJI 按钮。
 
 **切换麦克风和界面语言。** 直接在菜单栏选择；界面默认跟随 macOS，也可在“功能设置 → 语言”中手动切换。界面语言不影响语音识别语言。
 

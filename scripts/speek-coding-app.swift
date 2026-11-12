@@ -262,6 +262,8 @@ private enum MenuText: String, CaseIterable {
 	case eventPostingRequired = "Allow Simulated Keystrokes"
 	case deliveryStatus = "Automatic Paste and Send: %@…"
 	case deliveryHelp = "Copy transcription to the clipboard, then paste it automatically. Auto-send also presses Return. Clipboard-only mode does not require this permission."
+	case preparingApp = "Preparing SpeekCoding…"
+	case retryPreparation = "Setup incomplete — Retry…"
 	case nativeDJI = "Native DJI button "
 	case nativeDJIWaiting = "Native DJI: Not Ready — Retry…"
 	case nativeDJIHelp = "Quit Karabiner-Elements and allow Input Monitoring for SpeekCoding. Native DJI suppresses only the DJI volume-up button while active. Disabling this mode restores the prior mapping."
@@ -327,6 +329,8 @@ private enum MenuText: String, CaseIterable {
 		case .eventPostingRequired: return ("需要允许模拟按键", "需要允許模擬按鍵")
 		case .deliveryStatus: return ("自动粘贴和发送：%@…", "自動貼上與傳送：%@…")
 		case .deliveryHelp: return ("转写文字先复制到剪贴板，再自动粘贴；发送模式还会按回车。仅复制到剪贴板无需此权限。", "轉寫文字先複製到剪貼簿，再自動貼上；傳送模式還會按 Return。僅複製到剪貼簿無需此權限。")
+		case .preparingApp: return ("正在准备 SpeekCoding…", "正在準備 SpeekCoding…")
+		case .retryPreparation: return ("准备未完成，点击重试…", "準備未完成，點按重試…")
 		case .nativeDJI: return ("原生 DJI 按钮", "原生 DJI 按鈕")
 		case .nativeDJIWaiting: return ("原生 DJI：未就绪，点击重试…", "原生 DJI：未就緒，點按重試…")
 		case .nativeDJIHelp: return ("请退出 Karabiner-Elements，并为 SpeekCoding 允许输入监控。启用时只屏蔽 DJI 按钮的音量加事件；关闭时恢复原映射。", "請結束 Karabiner-Elements，並為 SpeekCoding 允許輸入監控。啟用時只屏蔽 DJI 按鈕的音量加事件；關閉時還原原映射。")
@@ -2257,6 +2261,9 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 	private var activeModelID: String?
 	private var modelRefresh = Date.distantPast
 	private var licenseWindow: LicenseWindowController?
+	private var preparation: Process?
+	private var preparationFailed = false
+	private var terminating = false
 
 	func applicationDidFinishLaunching(_ notification: Notification) {
 		UserDefaults.standard.register(defaults: [nativeFnPreference: true, nativeDJIPreference: true])
@@ -2273,7 +2280,8 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 		do {
 			try socketServer.start()
 			agentStarted = true
-			localASR.start()
+			prepareInstallation()
+			if preparation == nil && !preparationFailed { localASR.start() }
 			reconcileNativeFn()
 			if !UserDefaults.standard.bool(forKey: nativeDJIPreference) {
 				do { for warning in try DJINativeInput.recoverMappings() { NSLog("SpeekCoding DJI recovery: %@", warning) } }
@@ -2289,8 +2297,58 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 		}
 	}
 
+	// Only distribution bundles contain Node + CLI. Preparation runs as the
+	// logged-in user after IPC is ready, never as root in the package installer.
+	@objc private func prepareInstallation() {
+		guard preparation == nil, !terminating, let resources = Bundle.main.resourceURL else { return }
+		let node = resources.appendingPathComponent("runtime/node/bin/node")
+		guard FileManager.default.isExecutableFile(atPath: node.path) else { return }
+		let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+		let directory = configFileURL().deletingLastPathComponent()
+		let marker = directory.appendingPathComponent("app-preparation-version")
+		let required = [configFileURL(), directory.appendingPathComponent("bin/speek-hud"), directory.appendingPathComponent("install-state.json")]
+		let serviceExists = [directory.appendingPathComponent("com.speek.coding.asr.plist"), FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/LaunchAgents/com.speek.coding.asr.plist")].contains { FileManager.default.fileExists(atPath: $0.path) }
+		if !preparationFailed, (try? String(contentsOf: marker, encoding: .utf8)) == version,
+			required.allSatisfy({ FileManager.default.fileExists(atPath: $0.path) }), serviceExists { return }
+		preparationFailed = false
+		let process = Process()
+		process.executableURL = node
+		process.arguments = [resources.appendingPathComponent("cli/index.mjs").path, "setup", "--yes", "--json"]
+		var environment = ProcessInfo.processInfo.environment
+		environment["SPEEK_SKIP_LAUNCHSERVICES_REGISTER"] = "1"
+		// The running app is already registered; avoid deleting app copies during first launch.
+		process.environment = environment
+		process.standardOutput = FileHandle.nullDevice
+		process.standardError = FileHandle.nullDevice
+		process.terminationHandler = { [weak self] finished in
+			DispatchQueue.main.async {
+				guard let self else { return }
+				self.preparation = nil
+				guard !self.terminating else { return }
+				self.preparationFailed = finished.terminationStatus != 0
+				NSLog("SpeekCoding preparation exited: %d", finished.terminationStatus)
+				if !self.preparationFailed {
+					do { try Data(version.utf8).write(to: marker, options: .atomic) }
+					catch { self.preparationFailed = true }
+					self.localASR.start()
+					self.reconcileNativeFn(); self.reconcileNativeDJI()
+				}
+			}
+		}
+		preparation = process
+		do { try process.run() }
+		catch { preparation = nil; preparationFailed = true; NSLog("SpeekCoding preparation launch failed: %@", error.localizedDescription) }
+	}
+
 	func menuWillOpen(_ menu: NSMenu) {
 		menu.removeAllItems()
+		if preparation != nil || preparationFailed {
+			let item = NSMenuItem(title: menuText(preparation != nil ? .preparingApp : .retryPreparation), action: preparationFailed ? #selector(prepareInstallation) : nil, keyEquivalent: "")
+			item.target = self
+			item.isEnabled = preparationFailed
+			menu.addItem(item)
+			menu.addItem(.separator())
+		}
 		let heading = NSMenuItem(title: menuText(.microphoneInput), action: nil, keyEquivalent: "")
 		heading.isEnabled = false
 		menu.addItem(heading)
@@ -2450,6 +2508,7 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 		return warnings
 	}
 	private func reconcileNativeDJI() {
+		guard preparation == nil, !preparationFailed else { return }
 		guard UserDefaults.standard.bool(forKey: nativeDJIPreference), CGPreflightListenEventAccess() else {
 			_ = stopNativeDJI()
 			return
@@ -2499,6 +2558,7 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 	}
 
 	private func reconcileNativeFn() {
+		guard preparation == nil, !preparationFailed else { return }
 		guard UserDefaults.standard.bool(forKey: nativeFnPreference), CGPreflightListenEventAccess() else {
 			nativeFnObserver?.stop()
 			nativeFnObserver = nil
@@ -2656,6 +2716,8 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 	}
 
 	func applicationWillTerminate(_ notification: Notification) {
+		terminating = true
+		preparation?.terminate()
 		_ = stopNativeDJI()
 		nativeFnTimer?.invalidate()
 		nativeFnObserver?.stop()

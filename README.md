@@ -22,17 +22,13 @@ SpeekCoding brings local voice input to macOS. Focus a text field in Codex, Clau
 
 **Requires:** Apple Silicon with macOS 14+, or Intel with macOS 13+, a microphone, and Input Monitoring permission.
 
-1. Download the matching `.pkg` from [Releases](https://github.com/yizhouxw/speek-coding/releases/latest): `arm64` for Apple Silicon, `x86_64` for Intel. Install it and open **SpeekCoding** from Applications.
-2. Allow Input Monitoring for SpeekCoding. Set the macOS Fn/Globe action to Do Nothing. Quit existing remappers before testing native input.
-3. Open Terminal and configure the keyboard trigger:
+1. Download the matching `.pkg` from [Releases](https://github.com/yizhouxw/speek-coding/releases/latest), install it, and open **SpeekCoding** from Applications.
+2. **From v0.3.1**, the app prepares its user configuration and local service automatically. Wait for preparation to finish in the menu. If it fails, choose **Setup incomplete — Retry**. No Terminal command is required for packaged installs.
+3. Grant Microphone and Input Monitoring permissions from the app menu. Automatic paste also needs Accessibility/event posting. Set the macOS Fn/Globe action to Do Nothing and quit remappers that own the device.
+4. Choose your microphone and prepare a speech model in Model Management. Model downloads require a network connection; subsequent local transcription reuses the cache.
+5. Focus a text field. **Tap Fn → speak → tap Fn again.** Review delivery settings before enabling automatic Return.
 
-   ```bash
-   speek setup --trigger-mode keyboard
-   speek doctor
-   ```
-
-4. In the menu bar, select your microphone and grant SpeekCoding microphone permission. Automatic paste and Return also require Accessibility and event posting permissions.
-5. Focus a text input. **Tap Fn → speak → tap Fn again.** The first use downloads and loads the model; later sessions reuse cached weights.
+Existing users: quit the old app, install the new package and reopen it. Version changes automatically refresh user-side helpers and service configuration while preserving settings and models. Source installations and v0.3.0 or earlier still use the CLI setup flow.
 
 > Current `-dev-` installers are not Developer ID signed or notarized. macOS may block installation or launch; read the release notes before installing. Models are downloaded separately.
 
@@ -48,9 +44,7 @@ speek config --delivery-mode paste_and_send
 
 **Use a wireless button.** Connect the DJI Mic Mini receiver and configure its transmitter button:
 
-```bash
-speek setup --trigger-mode keyboard+dji --input-device "DJI Mic Mini"
-```
+Select the DJI microphone in the menu and enable Native DJI input.
 
 **Choose your language and microphone.** Both are available in the menu bar. Menus follow macOS by default; changing the menu language does not change the recognition language.
 

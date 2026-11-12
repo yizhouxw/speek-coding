@@ -27,9 +27,11 @@ HUD 会使用 AppKit 的屏幕安全区识别 MacBook 顶部摄像头缺口：�
 
 CLI 的录音触发、取消、权限检查和测试录音通过每用户 Unix socket `/tmp/speek-coding-<uid>/agent.sock` 调用 App。请求需要 `~/.config/speek-coding/ipc-token` 中的随机凭据；socket、状态目录和 token 都限制为当前用户访问。
 
-Karabiner 规则只执行已安装的 `speek-command` 客户端，由它携带同一凭据发送 `toggle`。App 也注册了 `speekcoding://` URL Scheme 作为受保护的可选入口，但只接受带有效 token 的 `toggle` / `cancel`，且不接受配置覆盖。
+可选外部集成执行已安装的 `speek-command` 客户端，由它携带同一凭据发送 `toggle`。App 也注册了 `speekcoding://` URL Scheme 作为受保护的可选入口，但只接受带有效 token 的 `toggle` / `cancel`，且不接受配置覆盖。
 
 
 ## Offline correction quality checks
 
 The normal tests mock model execution and never download weights. After downloading a text model from Model Management, run `python3 test/evaluate-correction.py <model-id>` with the MLX runtime Python to evaluate the small, multi-topic fixture set. The script checks preservation of key content and removal of hesitation sounds and prints latency; it is a regression sample, not a comprehensive quality benchmark.
+
+安装包从 v0.3.1 起在 App 打开后以当前用户身份异步调用内置初始化，成功后记录准备版本。失败可从菜单重试；源码构建不包含运行时，仍需 CLI 配置。
