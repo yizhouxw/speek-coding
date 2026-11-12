@@ -2486,10 +2486,8 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 	@objc private func toggleNativeDJI(_ sender: NSMenuItem) {
 		let enabled = sender.state != .on
 		if enabled {
-			let guide = NSAlert()
-			guide.messageText = menuText(.nativeDJI)
-			guide.informativeText = menuText(.nativeDJIHelp)
-			guide.runModal()
+			// Help is available in the menu tooltip; never nest a modal loop
+			// inside the status-menu tracking session.
 			if !CGPreflightListenEventAccess() { openInputMonitoringPermission() }
 		}
 		UserDefaults.standard.set(enabled, forKey: nativeDJIPreference)
@@ -2534,10 +2532,8 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 		let enabled = sender.state != .on
 		UserDefaults.standard.set(enabled, forKey: nativeFnPreference)
 		if enabled {
-			let guide = NSAlert()
-			guide.messageText = menuText(.nativeFn)
-			guide.informativeText = menuText(.nativeFnHelp)
-			guide.runModal()
+			// Help is available in the menu tooltip; never nest a modal loop
+			// inside the status-menu tracking session.
 			if !CGPreflightListenEventAccess() { openInputMonitoringPermission() }
 		}
 		reconcileNativeFn()
