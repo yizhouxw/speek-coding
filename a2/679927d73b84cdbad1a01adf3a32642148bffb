@@ -1,0 +1,29 @@
+CHANGELOG.md
+  s_d1acf170903776::t_5ec6f0b704f2b6 7-8
+CHANGELOG.zh-CN.md
+  s_d1acf170903776::t_0e0d07accf3722 7-8
+package-lock.json
+  s_d1acf170903776::t_4989155f9445ce 3,9
+package.json
+  s_d1acf170903776::t_41f2bc341d612f 3
+website/changelog-zh.html
+  s_d1acf170903776::t_b952e01c705dab 6
+website/changelog.html
+  s_d1acf170903776::t_771cbbf5a35fa4 6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "a2679927d73b84cdbad1a01adf3a32642148bffb",
+  "prompts": {},
+  "sessions": {
+    "s_d1acf170903776": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1ce5e-ec74-7d63-93d0-e7b3d20f393d",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "yizhouxw <54161870+yizhouxw@users.noreply.github.com>"
+    }
+  }
+}
