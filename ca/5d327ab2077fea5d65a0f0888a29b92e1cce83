@@ -1,0 +1,23 @@
+NativeInput/Sources/NativeInput/DJIMapping.swift
+  s_d1acf170903776::t_409e1ab2dd5559 1-49
+NativeInput/Tests/NativeInputTests/DJIMappingTests.swift
+  s_d1acf170903776::t_402b38b2f89762 1-31
+docs/NATIVE_INPUT_EXPERIMENT.md
+  s_d1acf170903776::t_9a01271fff1654 58-65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "ca5d327ab2077fea5d65a0f0888a29b92e1cce83",
+  "prompts": {},
+  "sessions": {
+    "s_d1acf170903776": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1ce5e-ec74-7d63-93d0-e7b3d20f393d",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "yizhouxw <54161870+yizhouxw@users.noreply.github.com>"
+    }
+  }
+}
