@@ -368,6 +368,8 @@ async function installSpeekCodingApp(runtime) {
 	<string>SpeekCoding</string>
 	<key>CFBundleDisplayName</key>
 	<string>SpeekCoding</string>
+	<key>CFBundleIconFile</key>
+	<string>SpeekCoding</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -395,6 +397,7 @@ async function installSpeekCodingApp(runtime) {
 	await fs.writeFile(path.join(appContentsDir, 'Info.plist'), plist, 'utf-8');
 	const resourceDirectory = path.join(appContentsDir, 'Resources');
 	await fs.mkdir(resourceDirectory, { recursive: true });
+	await fs.copyFile(path.join(runtime.repoRoot, 'app', 'SpeekCoding.icns'), path.join(resourceDirectory, 'SpeekCoding.icns'));
 	await fs.copyFile(path.join(runtime.repoRoot, 'licenses', 'LICENSES.txt'), path.join(resourceDirectory, 'OPEN_SOURCE_LICENSES.txt'));
 	const entitlementsPath = path.join(appContentsDir, 'SpeekCoding.entitlements');
 	await fs.writeFile(
