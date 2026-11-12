@@ -1,0 +1,29 @@
+CHANGELOG.md
+  s_d88553965ce385::t_b0cfe299af3f89 7-8
+cli/index.mjs
+  s_d88553965ce385::t_61dd8bc228c81f 1089-1091
+cli/lib/actions.mjs
+  s_d88553965ce385::t_6333653c6387b3 29,765,768
+cli/lib/app-cleanup.mjs
+  s_d88553965ce385::t_c2e4cf53e65fac 1-80
+docs/USAGE.zh-CN.md
+  s_d88553965ce385::t_4ae7fe837f5fcc 185-190
+test/app-cleanup.test.mjs
+  s_d88553965ce385::t_6e92553560f68d 1-92
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "b2dbd03692fba947dd7f7b0499367cd32ee8ee32",
+  "prompts": {},
+  "sessions": {
+    "s_d88553965ce385": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1cdb7-aadc-73a2-bac2-824c7dd21bbe",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "yizhouxw <54161870+yizhouxw@users.noreply.github.com>"
+    }
+  }
+}
