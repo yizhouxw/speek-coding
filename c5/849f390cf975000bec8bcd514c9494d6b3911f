@@ -1,0 +1,55 @@
+CHANGELOG.md
+  s_d1acf170903776::t_a93fd8d08ca80d 7-8
+CONTRIBUTING.md
+  s_d1acf170903776::t_7c8a8bdeb7fe87 33
+NativeInput/Package.swift
+  s_d1acf170903776::t_cbf0941b012233 7-8,11
+NativeInput/Sources/NativeInput/FnObserver.swift
+  s_d1acf170903776::t_3b0f03ad97bbc5 1-100
+NativeInput/Sources/NativeInput/State.swift
+  s_d1acf170903776::t_4a1ff052aaa2f5 20-21,23,25,31-32
+NativeInput/Sources/NativeInputDiagnostics/main.swift
+  s_d1acf170903776::t_2b9531ad753d77 1-46
+NativeInput/Tests/NativeInputTests/FnObserverTests.swift
+  s_d1acf170903776::t_880e81508dc094 1-74
+README.md
+  s_d1acf170903776::t_d1abfc23e2dd7a 17
+README.zh-CN.md
+  s_d1acf170903776::t_ade715ea18b4b9 17
+cli/lib/actions.mjs
+  s_d1acf170903776::t_4affc56aadc943 329-331
+docs/DEVELOPMENT.md
+  s_d1acf170903776::t_9ffab139224dba 5
+docs/FEATURE_SPEC.md
+  s_d1acf170903776::t_54dca5f393ebcf 10
+docs/NATIVE_INPUT_EXPERIMENT.md
+  s_d1acf170903776::t_cd48b26b57ba64 3,8,10,27-57
+docs/USAGE.zh-CN.md
+  s_d1acf170903776::t_07bdf2501d7651 191-194
+package.json
+  s_d1acf170903776::t_152ac54ccca745 29-32
+scripts/build-native-app.sh
+  s_d1acf170903776::t_686d95c29d6074 1-18
+scripts/build-package.sh
+  s_d1acf170903776::t_9dea004e595930 164-165
+scripts/speek-coding-app.swift
+  s_d1acf170903776::t_c16297deedd8ea 11,20,264-268,272,325-329,333,1274-1275,1339-1344,2239-2240,2266-2269,2317-2326,2357-2360,2426-2475,2665-2667
+scripts/validate.sh
+  s_d1acf170903776::t_5dd8eda05c5c65 20-24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "c5849f390cf975000bec8bcd514c9494d6b3911f",
+  "prompts": {},
+  "sessions": {
+    "s_d1acf170903776": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1ce5e-ec74-7d63-93d0-e7b3d20f393d",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "yizhouxw <54161870+yizhouxw@users.noreply.github.com>"
+    }
+  }
+}
