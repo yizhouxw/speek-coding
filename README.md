@@ -14,16 +14,16 @@ SpeekCoding brings local voice input to macOS. Focus a text field in Codex, Clau
 - **Keep speech on your Mac.** The default engine processes audio locally, with no ASR API key or cloud transcription subscription required. After the model is downloaded, local transcription works offline.
 - **Use your existing tools.** Dictate a prompt, describe a bug, or write a message wherever pasting is supported. Choose automatic paste and Return, paste only, or clipboard only.
 - **Optional offline intelligent correction.** On Apple Silicon with the local Qwen backend, a small Chat model cleans up hesitations, broken sentences and contextual recognition errors. Toggle Intelligent correction in Feature Settings. Model Management downloads and selects speech and text models separately; cached models run offline. If correction fails, the original is copied without auto-sending.
-- **A shortcut within reach.** Tap Fn to start and stop, or use an optional DJI Mic Mini button. Fn combinations keep their normal behavior. Global triggers use Karabiner-Elements by default. Current source also includes an opt-in [experimental native Fn mode](docs/NATIVE_INPUT_EXPERIMENT.md), not yet included in a release.
+- **Native shortcuts.** Tap Fn to start and stop, or use the DJI Mic Mini button. No Karabiner installation is required; enable Input Monitoring for SpeekCoding. DJI volume-up is suppressed only on its matched HID service while native input is active.
 - **Built for Apple Silicon, with Intel support.** Qwen3-ASR-0.6B uses 4-bit weights and MLX acceleration on Apple Silicon. Intel uses local faster-whisper with transcription after recording stops.
 - **Stay in your flow.** A native menu bar app provides microphone selection, recording feedback, cancellation, and English, Simplified Chinese, and Traditional Chinese menus. Release installers include the runtime, so users do not need Node.js, Python, Homebrew, or Xcode.
 
 ## Quick start
 
-**Requires:** Apple Silicon with macOS 14+, or Intel with macOS 13+, a microphone, and [Karabiner-Elements](https://karabiner-elements.pqrs.org/) for Fn / DJI triggers.
+**Requires:** Apple Silicon with macOS 14+, or Intel with macOS 13+, a microphone, and Input Monitoring permission.
 
 1. Download the matching `.pkg` from [Releases](https://github.com/yizhouxw/speek-coding/releases/latest): `arm64` for Apple Silicon, `x86_64` for Intel. Install it and open **SpeekCoding** from Applications.
-2. Install and open Karabiner-Elements, then complete its system authorization. SpeekCoding's menu can guide you to its official installer.
+2. Allow Input Monitoring for SpeekCoding. Set the macOS Fn/Globe action to Do Nothing. Quit existing remappers before testing native input.
 3. Open Terminal and configure the keyboard trigger:
 
    ```bash
@@ -72,7 +72,7 @@ For engine options, devices, delivery settings, and commands, see the [usage gui
 
 ## Privacy
 
-Default transcription stays on the loopback interface. First-use model downloads and optional Karabiner downloads require a network connection. There is no built-in usage analytics or recording upload service. Choosing a remote ASR endpoint sends audio to that provider.
+Default transcription stays on the loopback interface. First-use model downloads require a network connection. There is no built-in usage analytics or recording upload service. Choosing a remote ASR endpoint sends audio to that provider.
 
 Ordinary temporary recordings are cleaned up after a session. Explicit test recordings, cached models, and clipboard contents are retained. See [SECURITY.md](SECURITY.md) for details.
 

@@ -160,12 +160,7 @@ async function assertCommandWorks(command, args, message, code) {
 }
 
 async function assertInstallationPrerequisites(runtime) {
-	if (!(await pathExists(runtime.karabinerConfigPath))) {
-		throw createCommandError(
-			`Karabiner config not found at ${runtime.karabinerConfigPath}. Open Karabiner-Elements once first.`,
-			'KARABINER_CONFIG_MISSING',
-		);
-	}
+	// Native input requires no external remapper configuration.
 }
 
 async function assertSwiftCompiler(runtime) {
@@ -238,22 +233,7 @@ function hasManagedDeviceInCliOutput(stdout, stderr = '') {
 }
 
 export async function detectOptionalTriggerDevice(runtime) {
-	if (!(await pathExists(runtime.karabinerCliPath))) {
-		return { status: 'unknown', reason: 'karabiner_cli_missing' };
-	}
-
-	try {
-		const { stdout, stderr } = await execFile(runtime.karabinerCliPath, ['--list-connected-devices'], {
-			env: runtime.env,
-		});
-		const connected = hasManagedDeviceInCliOutput(stdout, stderr);
-		return { status: connected ? 'connected' : 'not_connected', reason: null };
-	} catch (error) {
-		return {
-			status: 'unknown',
-			reason: error.code || 'karabiner_cli_failed',
-		};
-	}
+	return { status: 'unknown', reason: 'native_hid_managed_by_app' };
 }
 
 function resolveConnectedDeviceStatus(triggerMode, detectedDevice) {
@@ -673,27 +653,27 @@ async function resolveInstallTriggerMode(runtime, options = {}) {
 	if (manifest?.triggerMode) {
 		return inferTriggerMode(manifest);
 	}
-	const existingTemplateRule = await loadRuleTemplate(runtime, TRIGGER_MODE_KEYBOARD_DJI);
-	const existingKarabinerConfig = await loadKarabinerConfig(runtime);
-	const existingManagedProfiles = findManagedEntries(existingKarabinerConfig, existingTemplateRule);
-	if (existingManagedProfiles.length > 0) {
-		return inferTriggerMode(manifest, existingManagedProfiles);
-	}
-	const detectedDevice = await detectOptionalTriggerDevice(runtime);
-	return detectedDevice.status === 'connected' ? TRIGGER_MODE_KEYBOARD_DJI : TRIGGER_MODE_KEYBOARD;
+	return TRIGGER_MODE_KEYBOARD_DJI;
 }
 
 async function syncInstallation(runtime, { profileOptions = {}, configOverrides = {}, installedMode, triggerMode }) {
 	const normalizedTriggerMode = normalizeTriggerMode(triggerMode) || TRIGGER_MODE_KEYBOARD;
-	const detectedDevice = await detectOptionalTriggerDevice(runtime);
-	const templateRule = await loadRuleTemplate(runtime, normalizedTriggerMode);
-	const karabinerConfig = await loadKarabinerConfig(runtime);
+	const detectedDevice = { status: 'unknown', reason: 'native_hid_managed_by_app' };
 	const existingConfig = await loadConfig(runtime);
 	const nextConfig = mergeConfig(existingConfig, configOverrides);
-	const resolvedProfile = resolveTargetProfile(karabinerConfig, normalizeProfileOptions(profileOptions));
-	const { profileName: appliedProfileName } = syncManagedEntries(karabinerConfig, templateRule, resolvedProfile.profileName, {
-		includeManagedDevice: normalizedTriggerMode === TRIGGER_MODE_KEYBOARD_DJI,
-	});
+	const appliedProfileName = null;
+	const resolvedProfile = { profileStrategy: 'native', sourceProfileName: null };
+	// Only remove rules owned by SpeekCoding; preserve other remapper settings.
+	if (await pathExists(runtime.karabinerConfigPath)) {
+		const legacy = await loadKarabinerConfig(runtime);
+		const devices = (legacy.profiles || []).map(profile => profile.devices);
+		const removed = removeManagedEntries(legacy, await loadRuleTemplate(runtime));
+		(legacy.profiles || []).forEach((profile, index) => {
+			if (devices[index] === undefined) delete profile.devices;
+			else profile.devices = devices[index];
+		});
+		if (removed.removedRuleCount || removed.removedDeviceCount) await writeKarabinerConfig(runtime, legacy);
+	}
 
 	const asrPython = await resolveInstalledPython(runtime);
 	await ensureIPCToken(runtime);
@@ -715,8 +695,7 @@ async function syncInstallation(runtime, { profileOptions = {}, configOverrides 
 		}
 	}
 	await removeIfExists(path.join(runtime.stateDir, 'command.log'));
-	await writeKarabinerConfig(runtime, karabinerConfig);
-	const profileSwitch = await selectProfileViaCli(runtime, appliedProfileName);
+	const profileSwitch = { status: 'skipped', reason: 'native_input' };
 	await removeIfExists(runtime.scriptTargetPath);
 	await removeIfExists(runtime.recorderLauncherTargetPath);
 	await removeIfExists(runtime.asrHelperTargetPath);
@@ -781,7 +760,7 @@ export async function update(runtime, options = {}) {
 
 	const manifest = await readManifest(runtime);
 	const templateRule = await loadRuleTemplate(runtime);
-	const karabinerConfig = await loadKarabinerConfig(runtime);
+	const karabinerConfig = await pathExists(runtime.karabinerConfigPath) ? await loadKarabinerConfig(runtime) : { profiles: [] };
 	const managedProfiles = findManagedEntries(karabinerConfig, templateRule);
 	const scriptInstalled = await pathExists(runtime.scriptTargetPath);
 
@@ -920,9 +899,9 @@ export async function doctor(runtime) {
 	const manifest = await readManifest(runtime);
 
 	let managedProfiles = [];
-	let profileCurrent = false;
+	let profileCurrent = true;
 	let triggerMode = inferTriggerMode(manifest);
-	if (karabinerConfigExists) {
+	if (karabinerConfigExists && !manifest) {
 		const karabinerConfig = await loadKarabinerConfig(runtime);
 		const templateRule = await loadRuleTemplate(runtime, inferTriggerMode(manifest, managedProfiles));
 		managedProfiles = findManagedEntries(karabinerConfig, templateRule);
@@ -939,7 +918,7 @@ export async function doctor(runtime) {
 		}
 	}
 
-	const connectedDevice = resolveConnectedDeviceStatus(triggerMode, await detectOptionalTriggerDevice(runtime));
+	const connectedDevice = resolveConnectedDeviceStatus(triggerMode, { status: 'unknown', reason: 'native_hid_managed_by_app' });
 	const installed = Boolean(manifest || speekCodingAppInstalled || scriptInstalled || managedProfiles.length > 0);
 	const packageVersion = runtime.packageVersion;
 	const installedVersion = manifest?.packageVersion || null;

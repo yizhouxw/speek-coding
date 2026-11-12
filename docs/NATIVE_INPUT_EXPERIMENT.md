@@ -1,3 +1,7 @@
+# 原生输入当前状态
+
+v0.3.0 将原生 Fn 和 DJI 设为默认，安装不再依赖 Karabiner。用户已完成基本按键、音量及录音体验测试。以下是开发历史记录，早期的实验开关和安装依赖描述不代表当前产品行为。睡眠唤醒、不同系统和外接键盘覆盖仍有限；正常退出恢复映射，SIGKILL 后下次启动恢复。
+
 # 原生输入基础库实验
 
 `NativeInput` 是 Swift Package。当前源码已将 `FnObserver` 静态链接进 App（源码安装和安装包使用同一构建入口），提供默认关闭的实验性原生 Fn 开关；另有默认关闭的原生 DJI 模式，组合原始 HID 监听和服务级 UserKeyMapping。已发布的 v0.2.0 不含此功能。执行 `swift test --package-path NativeInput`。部署目标为 macOS 13；在 macOS 27.0.1 Apple Silicon 上编译与测试，**没有在 macOS 13 上运行**。

@@ -37,7 +37,7 @@ export function createRuntime({ env = process.env } = {}) {
 	const homeDir = env.DJI_INSTALLER_HOME || os.homedir();
 	const configDir = env.SPEEK_CONFIG_DIR || env.DJI_CONFIG_DIR || path.join(homeDir, '.config', APP_NAME);
 	const karabinerDir = env.DJI_KARABINER_DIR || path.join(homeDir, '.config', 'karabiner');
-	const karabinerScriptsDir = env.DJI_KARABINER_SCRIPTS_DIR || path.join(karabinerDir, 'scripts');
+	const karabinerScriptsDir = env.DJI_KARABINER_SCRIPTS_DIR || path.join(configDir, 'bin');
 	const launchAgentsDir = env.SPEEK_LAUNCH_AGENTS_DIR || path.join(homeDir, 'Library', 'LaunchAgents');
 	const logsDir = env.SPEEK_LOGS_DIR || path.join(configDir, 'logs');
 	const uid = env.SPEEK_UID || (typeof process.getuid === 'function' ? process.getuid() : 'user');

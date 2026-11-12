@@ -262,11 +262,11 @@ private enum MenuText: String, CaseIterable {
 	case eventPostingRequired = "Allow Simulated Keystrokes"
 	case deliveryStatus = "Automatic Paste and Send: %@…"
 	case deliveryHelp = "Copy transcription to the clipboard, then paste it automatically. Auto-send also presses Return. Clipboard-only mode does not require this permission."
-	case nativeDJI = "Native DJI button (experimental)"
+	case nativeDJI = "Native DJI button "
 	case nativeDJIWaiting = "Native DJI: Not Ready — Retry…"
 	case nativeDJIHelp = "Quit Karabiner-Elements and allow Input Monitoring for SpeekCoding. Native DJI suppresses only the DJI volume-up button while active. Disabling this mode restores the prior mapping."
 	case nativeDJIRestore = "DJI mapping needs attention"
-	case nativeFn = "Native Fn trigger (experimental)"
+	case nativeFn = "Native Fn trigger "
 	case nativeFnUnavailable = "Native Fn: Not Listening — Retry…"
 	case nativeFnHelp = "Quit Karabiner-Elements before using native Fn. Allow Input Monitoring for SpeekCoding. Set the macOS Fn/Globe action to Do Nothing to avoid opening the input switcher or emoji panel. The DJI button has a separate native mode."
 	case inputMonitoringStatus = "Input Monitoring: %@…"
@@ -327,11 +327,11 @@ private enum MenuText: String, CaseIterable {
 		case .eventPostingRequired: return ("需要允许模拟按键", "需要允許模擬按鍵")
 		case .deliveryStatus: return ("自动粘贴和发送：%@…", "自動貼上與傳送：%@…")
 		case .deliveryHelp: return ("转写文字先复制到剪贴板，再自动粘贴；发送模式还会按回车。仅复制到剪贴板无需此权限。", "轉寫文字先複製到剪貼簿，再自動貼上；傳送模式還會按 Return。僅複製到剪貼簿無需此權限。")
-		case .nativeDJI: return ("原生 DJI 按钮（实验性）", "原生 DJI 按鈕（實驗性）")
+		case .nativeDJI: return ("原生 DJI 按钮", "原生 DJI 按鈕")
 		case .nativeDJIWaiting: return ("原生 DJI：未就绪，点击重试…", "原生 DJI：未就緒，點按重試…")
 		case .nativeDJIHelp: return ("请退出 Karabiner-Elements，并为 SpeekCoding 允许输入监控。启用时只屏蔽 DJI 按钮的音量加事件；关闭时恢复原映射。", "請結束 Karabiner-Elements，並為 SpeekCoding 允許輸入監控。啟用時只屏蔽 DJI 按鈕的音量加事件；關閉時還原原映射。")
 		case .nativeDJIRestore: return ("DJI 映射需要检查", "DJI 映射需要檢查")
-		case .nativeFn: return ("原生 Fn 触发（实验性）", "原生 Fn 觸發（實驗性）")
+		case .nativeFn: return ("原生 Fn 触发", "原生 Fn 觸發")
 		case .nativeFnUnavailable: return ("原生 Fn：未监听，点击重试…", "原生 Fn：未監聽，點按重試…")
 		case .nativeFnHelp: return ("使用原生 Fn 前请退出 Karabiner-Elements，并为 SpeekCoding 允许输入监控。在 macOS 键盘设置中将 Fn/地球仪操作设为不执行任何操作，避免切换输入法或弹出表情面板。DJI 按钮有单独的原生模式开关。", "使用原生 Fn 前請結束 Karabiner-Elements，並為 SpeekCoding 允許輸入監控。在 macOS 鍵盤設定中將 Fn/地球儀操作設為不執行任何操作，避免切換輸入法或彈出表情面板。DJI 按鈕有獨立的原生模式開關。")
 		case .inputMonitoringStatus: return ("输入监控：%@…", "輸入監控：%@…")
@@ -485,7 +485,7 @@ private struct AgentConfig {
 			hudBinaryPath: value(
 				["hudBinaryPath", "hudBin"],
 				"SPEEK_HUD_BIN",
-				default: URL(fileURLWithPath: home).appendingPathComponent(".config/karabiner/scripts/speek-hud").path
+				default: URL(fileURLWithPath: home).appendingPathComponent(".config/speek-coding/bin/speek-hud").path
 			),
 			audioFeedbackEnabled: boolean(["audioFeedbackEnabled"], "SPEEK_AUDIO_FEEDBACK_ENABLED", default: true),
 			feedbackSoundName: value(["feedbackSoundName"], "SPEEK_PRECONFIRM_SOUND_NAME", default: "Sosumi")
@@ -1329,13 +1329,14 @@ private final class SpeekAgent: @unchecked Sendable {
 		}
 		let accessibility = AXIsProcessTrusted()
 		let postEvent = CGPreflightPostEventAccess()
-		let allGranted = microphone == .authorized && accessibility && postEvent
+		let allGranted = microphone == .authorized && accessibility && postEvent && CGPreflightListenEventAccess()
 		return [
 			"permissionStatus": allGranted ? "ok" : "action_required",
 			"permissions": [
 				"microphone": microphoneStatus,
 				"accessibility": accessibility ? "granted" : "denied",
 				"postEvent": postEvent ? "granted" : "denied",
+				"inputMonitoring": CGPreflightListenEventAccess() ? "granted" : "denied",
 			],
 			"items": [
 				["key": "microphone", "label": "Microphone", "status": microphoneStatus, "source": "avfoundation"],
@@ -2251,17 +2252,14 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 	private var nativeDJIMessage: String?
 	private var nativeFnObserver: FnObserver?
 	private var nativeFnTimer: Timer?
-	private var downloadingKarabiner = false
 	private var modelItems: [JSONObject] = []
 	private var modelBusy = false
 	private var activeModelID: String?
 	private var modelRefresh = Date.distantPast
 	private var licenseWindow: LicenseWindowController?
-	private let karabinerCLI = "/Library/Application Support/org.pqrs/Karabiner-Elements/bin/karabiner_cli"
-	private let karabinerWebsite = URL(string: "https://karabiner-elements.pqrs.org/")!
-	private let karabinerDownload = URL(string: "https://github.com/pqrs-org/Karabiner-Elements/releases/download/v16.3.0/Karabiner-Elements-16.3.0.dmg")!
 
 	func applicationDidFinishLaunching(_ notification: Notification) {
+		UserDefaults.standard.register(defaults: [nativeFnPreference: true, nativeDJIPreference: true])
 		NSApp.setActivationPolicy(.accessory)
 		let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 		item.button?.image = statusBarIcon()
@@ -2395,14 +2393,7 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 		accessibilityPermission.toolTip = menuText(.deliveryHelp)
 		menu.addItem(accessibilityPermission)
 		menu.addItem(.separator())
-		let karabinerInstalled = FileManager.default.isExecutableFile(atPath: karabinerCLI)
-		let karabinerTitle = downloadingKarabiner ? menuText(.karabinerDownloading) :
-			(karabinerInstalled ? menuText(.karabinerInstalled) : menuText(.karabinerMissing))
-		let karabinerItem = NSMenuItem(title: karabinerTitle, action: #selector(openKarabiner), keyEquivalent: "")
-		karabinerItem.target = self
-		karabinerItem.isEnabled = !downloadingKarabiner
-		karabinerItem.toolTip = menuText(.karabinerHelp)
-		menu.addItem(karabinerItem)
+
 		menu.addItem(.separator())
 		let license = NSMenuItem(title: menuText(.license), action: #selector(showLicenses), keyEquivalent: "")
 		license.target = self
@@ -2553,85 +2544,6 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 	@objc private func openInputMonitoringPermission() {
 		if !CGPreflightListenEventAccess() { _ = CGRequestListenEventAccess() }
 		openPrivacySettings("Privacy_ListenEvent")
-	}
-
-	@objc private func openKarabiner() {
-		if FileManager.default.isExecutableFile(atPath: karabinerCLI) {
-			let application = URL(fileURLWithPath: "/Applications/Karabiner-Elements.app")
-			if !NSWorkspace.shared.open(application) { showKarabinerError(menuText(.karabinerOpenFailed)) }
-			return
-		}
-		guard !downloadingKarabiner else { return }
-		let guide = NSAlert()
-		guide.messageText = menuText(.karabinerInstall)
-		guide.informativeText = menuText(.karabinerGuide)
-		guide.addButton(withTitle: menuText(.downloadInstaller))
-		guide.addButton(withTitle: menuText(.cancel))
-		guard guide.runModal() == .alertFirstButtonReturn else { return }
-		downloadingKarabiner = true
-		let task = URLSession.shared.downloadTask(with: karabinerDownload) { [weak self] file, response, error in
-			guard let self else { return }
-			var temporaryDirectory: URL?
-			var mountedImage: URL?
-			do {
-				if let error { throw error }
-				guard let response = response as? HTTPURLResponse, (200..<300).contains(response.statusCode),
-					response.url?.scheme?.lowercased() == "https", let file else {
-					throw failure("KARABINER_DOWNLOAD_FAILED", menuText(.downloadFailed))
-				}
-				let directory = FileManager.default.temporaryDirectory.appendingPathComponent("speek-karabiner-\(UUID().uuidString)", isDirectory: true)
-				try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-				temporaryDirectory = directory
-				let image = directory.appendingPathComponent("Karabiner-Elements.dmg")
-				try FileManager.default.moveItem(at: file, to: image)
-				let mount = directory.appendingPathComponent("mount", isDirectory: true)
-				try FileManager.default.createDirectory(at: mount, withIntermediateDirectories: true)
-				try self.runInstallerTool("/usr/bin/hdiutil", ["attach", "-nobrowse", "-readonly", "-mountpoint", mount.path, image.path])
-				mountedImage = mount
-				let package = mount.appendingPathComponent("Karabiner-Elements.pkg")
-				let signature = try self.runInstallerTool("/usr/sbin/pkgutil", ["--check-signature", package.path])
-				guard signature.contains("signed by a developer certificate issued by Apple for distribution"),
-					signature.contains("Developer ID Installer: Fumihiko Takayama (G43BCU2T37)") else {
-					throw failure("KARABINER_SIGNATURE_INVALID", menuText(.signatureInvalid))
-				}
-				try self.runInstallerTool("/usr/sbin/spctl", ["--assess", "--type", "install", package.path])
-				DispatchQueue.main.async {
-					self.downloadingKarabiner = false
-					if !NSWorkspace.shared.open(package) { self.showKarabinerError(menuText(.installerOpenFailed)) }
-				}
-			} catch {
-				if let mount = mountedImage { _ = try? self.runInstallerTool("/usr/bin/hdiutil", ["detach", mount.path]) }
-				if let directory = temporaryDirectory { try? FileManager.default.removeItem(at: directory) }
-				DispatchQueue.main.async {
-					self.downloadingKarabiner = false
-					self.showKarabinerError(error.localizedDescription)
-				}
-			}
-		}
-		task.resume()
-	}
-
-	@discardableResult private func runInstallerTool(_ path: String, _ arguments: [String]) throws -> String {
-		let process = Process()
-		let output = Pipe()
-		process.executableURL = URL(fileURLWithPath: path)
-		process.arguments = arguments
-		process.standardOutput = output
-		process.standardError = FileHandle.nullDevice
-		try process.run()
-		let data = output.fileHandleForReading.readDataToEndOfFile()
-		process.waitUntilExit()
-		guard process.terminationStatus == 0 else { throw failure("KARABINER_INSTALLER_FAILED", menuText(.installerFailed)) }
-		return String(data: data, encoding: .utf8) ?? ""
-	}
-
-	private func showKarabinerError(_ message: String) {
-		let alert = NSAlert()
-		alert.messageText = menuText(.karabinerError)
-		alert.informativeText = menuText(.websiteSuggestion, message)
-		alert.addButton(withTitle: menuText(.openWebsite))
-		alert.addButton(withTitle: menuText(.cancel))
-		if alert.runModal() == .alertFirstButtonReturn { NSWorkspace.shared.open(karabinerWebsite) }
 	}
 
 	@objc private func selectMicrophone(_ sender: NSMenuItem) {

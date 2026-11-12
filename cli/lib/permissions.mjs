@@ -39,11 +39,11 @@ function normalizePermissionReport(report = {}) {
 				source: 'SpeekCoding.app',
 			},
 			{
-				key: 'karabinerInputMonitoring',
-				label: 'Karabiner input monitoring (external)',
-				status: 'external',
-				source: 'Karabiner-Elements',
-				detail: 'Managed by the external trigger driver',
+				key: 'inputMonitoring',
+				label: 'SpeekCoding input monitoring',
+				status: normalizeStatus(report.inputMonitoring),
+				source: 'SpeekCoding.app',
+				detail: 'Required for native Fn and DJI input',
 			},
 		];
 	const normalizedItems = items.map((item) => ({

@@ -16,14 +16,12 @@ RESOURCES="$APP/Contents/Resources"
 LAUNCHER="$PAYLOAD_ROOT/usr/local/bin/speek"
 TEST_HOME="$TMP_DIR/home"
 
-/bin/mkdir -p "$TEST_HOME/.config/karabiner"
-/usr/bin/printf '%s\n' '{"profiles":[{"name":"Default profile","selected":true,"complex_modifications":{"rules":[]}}]}' \
-	>"$TEST_HOME/.config/karabiner/karabiner.json"
+/bin/mkdir -p "$TEST_HOME"
 
 export PATH=/usr/bin:/bin
 export SPEEK_APP_RESOURCES="$RESOURCES"
 export DJI_INSTALLER_HOME="$TEST_HOME"
-export DJI_KARABINER_CLI=/usr/bin/true
+export DJI_KARABINER_CLI=/nonexistent/karabiner_cli
 export SPEEK_LAUNCHCTL=/usr/bin/true
 export SPEEK_STATE_DIR="$TEST_HOME/tmp/speek-coding"
 export SPEEK_LEGACY_STATE_DIR="$TEST_HOME/tmp/speek-coding-legacy"

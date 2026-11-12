@@ -5,6 +5,7 @@ export const INSTALL_BLOCKING_PERMISSION_KEYS = new Set([
 	'postEventCurrentSession',
 	'microphone',
 	'permissionInspection',
+	'inputMonitoring',
 ]);
 
 export const INSTALL_REMINDER_PERMISSION_KEYS = new Set([
@@ -12,6 +13,7 @@ export const INSTALL_REMINDER_PERMISSION_KEYS = new Set([
 	'postEventCurrentSession',
 	'microphone',
 	'permissionInspection',
+	'inputMonitoring',
 ]);
 
 export function isPermissionSatisfied(status) {

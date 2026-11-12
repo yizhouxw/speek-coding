@@ -452,8 +452,8 @@ async function commandAvailable(command, args = ['--version']) {
 
 function formatPermissionAction(item) {
 	switch (item.key) {
-		case 'karabinerInputMonitoring':
-			return 'Input Monitoring: managed by the external Karabiner trigger driver';
+		case 'inputMonitoring':
+			return 'Input Monitoring: required by SpeekCoding native input';
 		case 'accessibilityCurrentSession':
 			return item.status === 'unknown'
 				? 'Accessibility: SpeekCoding has not been authorized yet'
@@ -490,8 +490,6 @@ function formatDoctorReport(report) {
 		`update available: ${report.updateAvailable ? 'yes' : 'no'}`,
 		`distribution: ${report.packagedInstallation ? 'self-contained package' : 'source install'}`,
 		`ASR Python: ${report.bundledPythonAvailable ? 'bundled' : report.venvPythonExists ? 'venv' : 'missing'}`,
-		`Karabiner CLI: ${report.karabinerCliExists ? 'ok' : 'missing'}`,
-		`Karabiner config: ${report.karabinerConfigExists ? 'ok' : 'missing'}`,
 		`SpeekCoding.app: ${report.speekCodingAppInstalled ? 'installed' : 'missing'}`,
 		`App signature: ${report.appSignature?.status || 'unknown'}`,
 		`App IPC: ${report.agent?.running ? 'ready' : 'not running'}`,
@@ -501,7 +499,6 @@ function formatDoctorReport(report) {
 		`config installed: ${report.configInstalled ? 'yes' : 'no'}`,
 		`trigger mode: ${formatTriggerMode(report.triggerMode)}`,
 		`device: ${report.connectedDevice.status}`,
-		`managed profiles: ${report.managedProfiles.length ? report.managedProfiles.map((profile) => profile.name).join(', ') : 'none'}`,
 	];
 	if (!report.packagedInstallation) {
 		lines.splice(6, 0, `developer python3: ${report.pythonAvailable ? 'ok' : 'missing'}`);
@@ -857,7 +854,7 @@ async function ensureKarabinerInstalled(runtime, flags, interactive) {
 
 async function openPermissionPanels(issues) {
 	const issueKeys = new Set(issues.map((item) => item.key));
-	if (issueKeys.has('karabinerInputMonitoring')) {
+	if (issueKeys.has('inputMonitoring')) {
 		await openSettingsPanel(INPUT_MONITORING_SETTINGS_URL);
 	}
 	if (issueKeys.has('accessibilityCurrentSession') || issueKeys.has('postEventCurrentSession')) {
@@ -902,7 +899,7 @@ async function retryableInstall(runtime, flags, interactive) {
 	const explicitProfileOverrides = buildProfileOverrides(flags);
 	const explicitTriggerMode = flags.triggerMode;
 
-	await ensureKarabinerInstalled(runtime, flags, interactive);
+	// Native input does not install an external remapper.
 
 	while (true) {
 		const s = createProgress(showUi);
@@ -911,11 +908,7 @@ async function retryableInstall(runtime, flags, interactive) {
 			let triggerMode = explicitTriggerMode;
 			let reusedProfileName = null;
 			let reusedTriggerMode = null;
-			if (showUi && !explicitProfileOverrides) {
-				const profileDecision = await collectInteractiveProfileOptions(runtime);
-				profileOptions = profileDecision.profileOptions;
-				reusedProfileName = profileDecision.reusedProfileName;
-			}
+
 			if (showUi && !explicitTriggerMode) {
 				const triggerDecision = await collectInteractiveTriggerMode(runtime);
 				triggerMode = triggerDecision.triggerMode;
@@ -930,13 +923,13 @@ async function retryableInstall(runtime, flags, interactive) {
 			if (showUi && Object.keys(configOverrides).length === 0) {
 				configOverrides = await collectInteractiveConfig(runtime);
 			}
-			s.start('Applying Karabiner, script, and config changes');
+			s.start('Installing native input, scripts, and configuration');
 			const result = await install(runtime, {
 				profileOptions,
 				triggerMode,
 				configOverrides,
 			});
-			s.stop(`Installed on profile ${result.profileName}`);
+			s.stop(`Installed native input`);
 			if (showUi && result.profileSwitch.status === 'failed') {
 				note(
 					`Karabiner CLI could not switch to profile "${result.profileName}" automatically. Select it manually in Karabiner-Elements if needed.`,

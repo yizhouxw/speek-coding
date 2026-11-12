@@ -4,6 +4,13 @@ Public releases follow [Semantic Versioning](https://semver.org/). Version numbe
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-12
+
+- Use native Fn and device-scoped DJI HID input by default, without installing Karabiner. Setup migrates owned legacy rules while preserving other remapper settings.
+- Move client and HUD helpers to the SpeekCoding configuration directory.
+- Input Monitoring is required. DJI mappings restore on normal exit; crash recovery runs on next launch. Sleep/wake and additional hardware/OS combinations still need field coverage.
+- Release installers remain development-signed/unsigned and are not Apple-notarized.
+
 - Separate HUD transcript text from smaller status messages below it; give errors a distinct color and longer reading time, with spacing for notch and regular screens.
 
 - Leave ASR context empty by default to avoid instruction text leaking into recognition results. Explicit custom ASR prompts remain supported.
