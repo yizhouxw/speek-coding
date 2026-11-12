@@ -1,0 +1,21 @@
+CHANGELOG.md
+  s_d1acf170903776::t_9dd80cd6f0d2ae 7-8
+scripts/speek-hud.swift
+  s_d1acf170903776::t_591041a05e5db6 51,54,148-149,183-187,196,267-273,275-279,368-374,382,389,459,485,498
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "2d3dc67a84c902ded342e6bda3dfc479616871d9",
+  "prompts": {},
+  "sessions": {
+    "s_d1acf170903776": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1ce5e-ec74-7d63-93d0-e7b3d20f393d",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "yizhouxw <54161870+yizhouxw@users.noreply.github.com>"
+    }
+  }
+}
