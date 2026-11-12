@@ -1,0 +1,49 @@
+CHANGELOG.md
+  s_6185b89c349d54::t_316213215df77c 7
+README.md
+  s_6185b89c349d54::t_542c7c44acfaa6 16
+README.zh-CN.md
+  s_6185b89c349d54::t_ce260be35a895d 14,59-60
+cli/index.mjs
+  s_d88553965ce385::t_de3ac2377650a5 179-180
+cli/lib/args.mjs
+  s_d88553965ce385::t_bf4955e5f34964 38-39,87
+cli/lib/config.mjs
+  s_d88553965ce385::t_f8eb52c7b1b594 16,20,144,218,263
+docs/USAGE.zh-CN.md
+  s_6185b89c349d54::t_09c85791a841e5 126-136
+scripts/speek-coding-app.swift
+  s_d88553965ce385::t_541554d559050d 345,428,798-860,1689,2504-2526,2647-2651
+scripts/validate.sh
+  s_d88553965ce385::t_3a34aba632c080 26
+test/args.test.mjs
+  s_d88553965ce385::t_8adc2ad51c7e40 36-41
+test/config.test.mjs
+  s_d88553965ce385::t_9f1dcd88b80334 58-67
+test/transcript-cleanup.json
+  s_d88553965ce385::t_780ff17cb7ac8f 1-92
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "a33d7796f36c602ff31df8dd2d650acec80df106",
+  "prompts": {},
+  "sessions": {
+    "s_6185b89c349d54": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1cd2e-772b-7f93-b89d-9e6253ebf167",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "yizhouxw <54161870+yizhouxw@users.noreply.github.com>"
+    },
+    "s_d88553965ce385": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1cdb7-aadc-73a2-bac2-824c7dd21bbe",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "yizhouxw <54161870+yizhouxw@users.noreply.github.com>"
+    }
+  }
+}
