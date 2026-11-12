@@ -33,3 +33,9 @@ test('parseArgs reports missing values and unknown flags', () => {
 	assert.throws(() => parseArgs(['config', '--asr-model']), /Missing value/u);
 	assert.throws(() => parseArgs(['status', '--mystery']), /Unknown option/u);
 });
+
+test('parseArgs accepts the transcript cleanup preference', () => {
+	assert.deepEqual(parseArgs(['config', '--transcript-cleanup', 'off']), {
+		command: 'config', flags: { transcriptCleanup: 'off' },
+	});
+});

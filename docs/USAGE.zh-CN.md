@@ -123,6 +123,17 @@ speek config --asr-language auto \
 speek restart
 ```
 
+### 定稿清理与术语纠错
+
+默认在最终粘贴前进行本地清理，适用于实时转写、Whisper 和外部转写服务。实时草稿保留识别内容，定稿去掉独立的“嗯、呃”、连接部分被句号切开的词（如“过。多”），并在明确的编程语境下修正“Agent 的哈尼斯”等术语。保留“啊、呢、吧”、否定和有意义的重复，不总结或执行口述内容中的指令。代码块、行内代码、引号内容、路径和链接不参与改写。
+
+```bash
+speek config --transcript-cleanup off  # 保留原始转写
+speek config --transcript-cleanup on   # 恢复清理（默认）
+```
+
+配置文件对应 `SPEEK_TRANSCRIPT_CLEANUP=1` 或 `0`，旧配置未设置时默认开启。清理采用有限的本地规则，不额外下载模型或发送文本到云端，也不能纠正任意语义错误。可通过 `--asr-prompt` 提供更多领域词汇帮助识别；已有自定义提示会保留。
+
 ### 外部 OpenAI-compatible ASR
 
 SpeekCoding 也可以连接已有的转写服务。远程服务必须使用 HTTPS；明文 HTTP 只允许 `localhost` / loopback 地址：

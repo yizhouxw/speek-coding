@@ -176,6 +176,8 @@ function parseChoiceFlag(value, key, choices) {
 function buildConfigOverrides(flags) {
 	const overrides = {};
 	const audioFeedbackEnabled = parseToggle(flags.sound, '--sound');
+	const transcriptCleanup = parseToggle(flags.transcriptCleanup, '--transcript-cleanup');
+	if (transcriptCleanup != null) overrides.transcriptCleanup = transcriptCleanup;
 	const readyOverlayEnabled = parseToggle(flags.readyOverlay, '--ready-overlay');
 	const reviewWindowSeconds = parsePositiveNumberFlag(flags.reviewWindow, '--review-window');
 	if (audioFeedbackEnabled === false) {

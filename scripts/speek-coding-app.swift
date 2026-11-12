@@ -342,6 +342,7 @@ private struct AgentConfig {
 	let asrAPIURL: String
 	let asrBackend: String
 	let asrStreaming: Bool
+	let transcriptCleanup: Bool
 	let asrModel: String
 	let asrLanguage: String
 	let asrPrompt: String
@@ -424,6 +425,7 @@ private struct AgentConfig {
 			asrAPIURL: value(["asrApiUrl", "asr_api_url"], "SPEEK_ASR_API_URL", default: "http://127.0.0.1:8000/v1/audio/transcriptions"),
 			asrBackend: backend,
 			asrStreaming: boolean(["asrStreaming"], "SPEEK_ASR_STREAMING", default: true),
+			transcriptCleanup: boolean(["transcriptCleanup"], "SPEEK_TRANSCRIPT_CLEANUP", default: true),
 			asrModel: value(["asrModel", "asr_model"], "SPEEK_ASR_MODEL",
 				default: backend == "qwen-mlx" ? "mlx-community/Qwen3-ASR-0.6B-4bit" : "whisper-large-v3-turbo"),
 			asrLanguage: value(["asrLanguage", "asr_language"], "SPEEK_ASR_LANGUAGE", default: ""),
@@ -792,6 +794,69 @@ private final class NativeRecorder: @unchecked Sendable {
 }
 
 // MARK: - ASR and delivery
+
+private enum TranscriptCleaner {
+	// Literal text is never rewritten. An unfinished code span protects the rest
+	// of the transcript as well, rather than treating code as spoken prose.
+	private static let literals = try! NSRegularExpression(pattern:
+		#"```[\s\S]*?(?:```|\z)|`[^`\n]*(?:`|\z)|“[^”\n]*”|「[^」\n]*」|‘[^’\n]*’|'[^'\n]*'|\"[^\"\n]*\"|https?://[^\s，。；！？]+|(?:[~/]|[A-Za-z]:\\)[^\s，。；！？]+"#)
+	private static let rules: [(NSRegularExpression, String)] = {
+		var pairs: [(String, String)] = [
+			// Only standalone hesitation sounds; keep words such as 嗯嗯/呃逆,
+			// meaningful repetition, negation, and the speaker's 啊/呢/吧.
+			(#"(?<=[的是把用和])[，,][ \t]*[嗯呃][，,][ \t]*"#, ""),
+			(#"(^|[。.!！?？；;\n])[ \t]*[嗯呃][。.!！?？；;][ \t]*"#, "$1"),
+			(#"[，,][ \t]*[嗯呃](?=[。.!！?？；;])"#, ""),
+			(#"(^|[\s，,。.!！?？；;：:])[嗯呃](?:[，,、][ \t]*|[ \t]+|(?=[。.!！?？；;\n]|$))"#, "$1"),
+			// A short, explicit vocabulary avoids removing arbitrary sentence ends.
+			(#"(?<=也)[。][ \t]*(?=包含|包括|需要|应该)"#, ""),
+			(#"(?<=使用)[，,][ \t]*(?=(?i:squash[ \t]+merge))"#, ""),
+			// Restrict phonetic corrections to their software-engineering context.
+			(#"(?i)(?<![A-Za-z0-9_])(?:agent|agena)(?:[ \t]*(?:的[ \t]*)?(?:哈尼斯|哈纳斯)|(?:[ \t]+|的[ \t]*)harness)(?![A-Za-z0-9_])"#, "Agent harness"),
+			(#"(?i)(?<=做)[ \t]*力[ \t]*vu(?=[，,、 \t]*(?:优化|一下))"#, " review"),
+			(#"(?i)(?<=整体)[ \t]*力[ \t]*vu(?=[ \t]*一下)"#, " review"),
+		]
+		for word in ["过多", "包含", "实施", "提交", "合并", "优化", "约束"] {
+			let letters = Array(word).map(String.init)
+			pairs.append((letters.joined(separator: #"[。][ \t]*"#), word))
+		}
+		return pairs.map { (try! NSRegularExpression(pattern: $0.0), $0.1) }
+	}()
+
+	static func clean(_ raw: String, enabled: Bool = true) -> String {
+		guard enabled else { return raw }
+		let source = raw as NSString
+		var result = ""
+		var cursor = 0
+		for match in literals.matches(in: raw, range: NSRange(location: 0, length: source.length)) {
+			result += cleanProse(source.substring(with: NSRange(location: cursor, length: match.range.location - cursor)))
+			result += source.substring(with: match.range)
+			cursor = NSMaxRange(match.range)
+		}
+		result += cleanProse(source.substring(from: cursor))
+		if result.range(of: #"^[\s，,。.!！?？；;：:]*$"#, options: .regularExpression) != nil { return "" }
+		return result.trimmingCharacters(in: .whitespacesAndNewlines)
+	}
+
+	private static func cleanProse(_ raw: String) -> String {
+		var text = raw
+		// Repeat the filler pass to handle consecutive hesitations without
+		// deleting adjacent punctuation or crossing paragraph boundaries.
+		var previous: String
+		repeat {
+			previous = text
+			for (regex, replacement) in rules {
+				text = regex.stringByReplacingMatches(in: text, range: NSRange(text.startIndex..., in: text), withTemplate: replacement)
+			}
+		} while text != previous
+		// PI is a valid acronym. Correct it only in an explicit PR workflow and
+		// only when it occupies the same "one PR" phrase, not in math or code.
+		if raw.range(of: #"(?<![A-Za-z0-9_])PR(?![A-Za-z0-9_])"#, options: .regularExpression) != nil {
+			text = text.replacingOccurrences(of: #"(包含到|合并到|放到|纳入|放在)(一个)PI(?=里面|里|中)"#, with: "$1$2PR", options: .regularExpression)
+		}
+		return text
+	}
+}
 
 private enum NativeTranscriber {
 	@discardableResult
@@ -1621,6 +1686,7 @@ private final class SpeekAgent: @unchecked Sendable {
 		command: String,
 		completion: @escaping AgentCompletion
 	) {
+		let transcript = TranscriptCleaner.clean(transcript, enabled: config.transcriptCleanup)
 		guard !transcript.isEmpty else {
 			state = .idle
 			files.updateHUD(status: "nospeech", detail: "No speech recognized")
@@ -2435,6 +2501,29 @@ private final class SpeekCodingApplicationDelegate: NSObject, NSApplicationDeleg
 	}
 }
 
+private func runTranscriptCleanupSelfTest() throws {
+	guard CommandLine.arguments.count >= 3 else { throw failure("TEST_ARGUMENTS", "Expected cleanup fixtures path.") }
+	let data = try Data(contentsOf: URL(fileURLWithPath: CommandLine.arguments[2]))
+	let cases = try JSONSerialization.jsonObject(with: data) as! [[String: String]]
+	let enabled = AgentConfig.load(overrides: ["transcriptCleanup": true])
+	let disabled = AgentConfig.load(overrides: ["transcriptCleanup": false])
+	for item in cases {
+		let input = item["input"]!
+		let expected = item["expected"]!
+		let actual = TranscriptCleaner.clean(input, enabled: enabled.transcriptCleanup)
+		guard actual == expected else {
+			throw failure("TEST_CLEANUP", "\(item["name"]!): expected \(expected.debugDescription), got \(actual.debugDescription)")
+		}
+		guard TranscriptCleaner.clean(actual) == actual else {
+			throw failure("TEST_CLEANUP", "Cleanup must be idempotent: \(item["name"]!)")
+		}
+		guard TranscriptCleaner.clean(input, enabled: disabled.transcriptCleanup) == input else {
+			throw failure("TEST_CLEANUP", "Disabled cleanup changed the transcript.")
+		}
+	}
+	print("Transcript cleanup self-test passed (\(cases.count) fixtures, idempotence, and disabled mode).")
+}
+
 private func runMenuLocalizationSelfTest() {
 	let cases: [([String], MenuLanguage)] = [
 		(["zh-Hans-CN"], .simplifiedChinese), (["zh-CN"], .simplifiedChinese),
@@ -2553,6 +2642,11 @@ private func runLicenseSelfTest() throws {
 		precondition(!window.isVisible)
 	}
 	print("License self-test passed (project, model and dependency text; optional preview and dismiss controls).")
+}
+
+if CommandLine.arguments.contains("--cleanup-self-test") {
+	do { try runTranscriptCleanupSelfTest(); exit(EXIT_SUCCESS) }
+	catch { FileHandle.standardError.write(Data("\(error)\n".utf8)); exit(EXIT_FAILURE) }
 }
 
 if CommandLine.arguments.contains("--license-self-test") {

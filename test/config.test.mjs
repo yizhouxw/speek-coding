@@ -55,6 +55,16 @@ test('loadConfig migrates legacy DJI preferences', async (context) => {
 	assert.equal(config.reviewWindowSeconds, 5);
 });
 
+test('transcript cleanup defaults on and preserves the disabled preference', async (context) => {
+	assert.equal(normalizeConfig({}).transcriptCleanup, true);
+	assert.equal(normalizeConfig({ transcriptCleanup: 'off' }).transcriptCleanup, false);
+	const configDir = await fs.mkdtemp(path.join(os.tmpdir(), 'speek-cleanup-'));
+	context.after(() => fs.rm(configDir, { recursive: true, force: true }));
+	const runtime = { configDir, configFilePath: path.join(configDir, 'config.env') };
+	await writeConfig(runtime, { ...DEFAULT_CONFIG, transcriptCleanup: false });
+	assert.equal((await loadConfig(runtime)).transcriptCleanup, false);
+});
+
 test('writeConfig emits canonical SPEEK preferences', async (context) => {
 	const configDir = await fs.mkdtemp(path.join(os.tmpdir(), 'speek-config-'));
 	context.after(() => fs.rm(configDir, { recursive: true, force: true }));

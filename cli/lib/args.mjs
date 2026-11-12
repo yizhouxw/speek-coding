@@ -35,6 +35,8 @@ Options:
   --asr-api-key-env <n>  Environment variable containing an API key
   --asr-language <lang>  auto or a fixed language code such as zh/en
   --asr-prompt <text>    Optional transcription vocabulary hint
+  --transcript-cleanup <on|off>
+                         Clean fillers, broken phrases, and coding terms (default: on)
   --fake-transcript <t>  Bypass ASR with a fixed transcript
   --asr-backend <name>   qwen-mlx | faster-whisper | whisper-cpp
   --asr-host <host>      Local ASR loopback bind host
@@ -82,6 +84,7 @@ const VALUE_FLAGS = new Map([
 	['--asr-api-key-env', 'asrApiKeyEnv'],
 	['--asr-language', 'asrLanguage'],
 	['--asr-prompt', 'asrPrompt'],
+	['--transcript-cleanup', 'transcriptCleanup'],
 	['--fake-transcript', 'fakeTranscript'],
 	['--asr-backend', 'asrBackend'],
 	['--asr-host', 'asrHost'],
