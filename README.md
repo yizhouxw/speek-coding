@@ -44,7 +44,7 @@ speek config --delivery-mode paste_and_send
 
 **Use a wireless button.** Connect the DJI Mic Mini receiver and configure its transmitter button:
 
-Select the DJI microphone in the menu and enable Native DJI input.
+Select the DJI microphone in the menu ; button input is automatic.
 
 **Choose your language and microphone.** Both are available in the menu bar. Menus follow macOS by default; changing the menu language does not change the recognition language.
 

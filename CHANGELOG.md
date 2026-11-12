@@ -4,6 +4,8 @@ Public releases follow [Semantic Versioning](https://semver.org/). Version numbe
 
 ## [Unreleased]
 
+- Remove native Fn/DJI mode switches from the menu. Input starts automatically with the app; old disabled preferences no longer suppress input.
+
 ## [0.3.1] - 2026-11-12
 
 - Packaged apps automatically prepare user configuration, helpers and the local service on first launch and version changes. Add menu progress and retry; no manual setup commands for packaged installs.
