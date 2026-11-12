@@ -48,10 +48,10 @@ private struct HudScreenGeometry {
 }
 
 private struct HudLayout {
-	static let fallbackSize = NSSize(width: 336, height: 56)
+	static let fallbackSize = NSSize(width: 480, height: 100)
 	static let hardwareMinimumWidth: CGFloat = 420
 	static let hardwareSideContentWidth: CGFloat = 130
-	static let hardwareBottomExtension: CGFloat = 28
+	static let hardwareBottomExtension: CGFloat = 66
 
 	let windowFrame: NSRect
 	let hardwareNotchRect: NSRect?
@@ -145,7 +145,8 @@ final class HudController: NSObject, NSApplicationDelegate {
 	private var pillView: PillView!
 	private let dot = DotView(frame: .zero)
 	private let titleLabel = NSTextField(labelWithString: "Listening")
-	private let detailLabel = NSTextField(labelWithString: "Microphone")
+	private let detailLabel = NSTextField(labelWithString: "")
+	private let transcriptLabel = NSTextField(labelWithString: "")
 	private let timeLabel = NSTextField(labelWithString: "00:00")
 	private let levelMeter = LevelMeterView(frame: .zero)
 	private let cancelButton = NSButton(title: "Cancel", target: nil, action: nil)
@@ -179,7 +180,11 @@ final class HudController: NSObject, NSApplicationDelegate {
 
 		detailLabel.textColor = NSColor.white.withAlphaComponent(0.62)
 		detailLabel.backgroundColor = .clear
-		detailLabel.lineBreakMode = .byTruncatingHead
+		detailLabel.lineBreakMode = .byWordWrapping
+		detailLabel.maximumNumberOfLines = 2
+		transcriptLabel.textColor = .white
+		transcriptLabel.font = .systemFont(ofSize: 13, weight: .medium)
+		transcriptLabel.lineBreakMode = .byTruncatingHead
 
 		timeLabel.textColor = .white
 		timeLabel.alignment = .right
@@ -188,6 +193,7 @@ final class HudController: NSObject, NSApplicationDelegate {
 		view.addSubview(dot)
 		view.addSubview(titleLabel)
 		view.addSubview(detailLabel)
+		view.addSubview(transcriptLabel)
 		view.addSubview(timeLabel)
 		view.addSubview(levelMeter)
 		cancelButton.target = self
@@ -258,19 +264,19 @@ final class HudController: NSObject, NSApplicationDelegate {
 
 	private func applyContentLayout(_ layout: HudLayout) {
 		let size = layout.windowFrame.size
+		// Transcript and system messages have separate rows in both layouts.
+		transcriptLabel.frame = NSRect(x: 24, y: 44, width: max(1, size.width - 120), height: 18)
+		detailLabel.frame = NSRect(x: 24, y: 12, width: max(1, size.width - 48), height: 28)
+		detailLabel.font = .systemFont(ofSize: 10.5, weight: .regular)
+		detailLabel.alignment = .left
+		cancelButton.frame = NSRect(x: size.width - 88, y: 42, width: 72, height: 22)
+		levelMeter.frame = NSRect(x: 24, y: 5, width: max(1, size.width - 48), height: 3)
 		guard let notch = layout.hardwareNotchRect else {
-			dot.frame = NSRect(x: 22, y: 23, width: 10, height: 10)
-			titleLabel.frame = NSRect(x: 42, y: 11, width: 190, height: 18)
-			titleLabel.font = .systemFont(ofSize: 14, weight: .semibold)
-			titleLabel.alignment = .left
-			detailLabel.frame = NSRect(x: 42, y: 31, width: 190, height: 15)
-			detailLabel.font = .systemFont(ofSize: 11, weight: .regular)
-			detailLabel.alignment = .left
-			timeLabel.frame = NSRect(x: 242, y: 15, width: 72, height: 26)
-			timeLabel.font = .monospacedDigitSystemFont(ofSize: 18, weight: .medium)
-			levelMeter.frame = NSRect(x: 42, y: 6, width: 190, height: 6)
-			cancelButton.frame = NSRect(x: 250, y: 1, width: 72, height: 22)
-			timeLabel.frame = NSRect(x: 242, y: 28, width: 72, height: 24)
+			dot.frame = NSRect(x: 24, y: 76, width: 10, height: 10)
+			titleLabel.frame = NSRect(x: 42, y: 72, width: 250, height: 20)
+			titleLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+			timeLabel.frame = NSRect(x: size.width - 96, y: 70, width: 72, height: 24)
+			timeLabel.font = .monospacedDigitSystemFont(ofSize: 16, weight: .medium)
 			return
 		}
 
@@ -297,11 +303,6 @@ final class HudController: NSObject, NSApplicationDelegate {
 		)
 		timeLabel.font = .monospacedDigitSystemFont(ofSize: 15, weight: .medium)
 
-		detailLabel.frame = NSRect(x: 24, y: 8, width: max(1, size.width - 118), height: 14)
-		cancelButton.frame = NSRect(x: size.width - 88, y: 5, width: 72, height: 22)
-		detailLabel.font = .systemFont(ofSize: 10.5, weight: .regular)
-		detailLabel.alignment = .center
-		levelMeter.frame = NSRect(x: 42, y: 2, width: max(1, size.width - 84), height: 4)
 	}
 
 	@objc private func screenParametersDidChange(_ notification: Notification) {
@@ -364,6 +365,13 @@ final class HudController: NSObject, NSApplicationDelegate {
 		cancelButton.isHidden = !["recording", "transcribing", "downloading", "loading"].contains(status)
 		let detail = state("hud_detail")
 		let liveText = state("live_transcript")
+		if !liveText.isEmpty || status == "recording" || status == "transcribing" {
+			transcriptLabel.stringValue = liveText
+		} else if status == "loading" || status == "downloading" {
+			transcriptLabel.stringValue = ""
+		}
+		detailLabel.textColor = ["error", "permission", "nospeech", "timeout"].contains(status)
+			? NSColor.systemOrange : NSColor.white.withAlphaComponent(0.55)
 		let startedAt = epoch("hud_started_at") ?? Date().timeIntervalSince1970
 		let expiresAt = epoch("hud_expires_at")
 
@@ -371,14 +379,14 @@ final class HudController: NSObject, NSApplicationDelegate {
 		case "recording":
 			dot.color = .systemRed
 			titleLabel.stringValue = "Listening"
-			detailLabel.stringValue = liveText.isEmpty ? (detail.isEmpty ? "Microphone" : detail) : liveText
+			detailLabel.stringValue = detail.isEmpty ? "Microphone" : detail
 			timeLabel.stringValue = elapsedText(from: startedAt)
 			levelMeter.isHidden = false
 			levelMeter.levels = waveformLevels()
 		case "transcribing":
 			dot.color = .systemBlue
 			titleLabel.stringValue = "Transcribing"
-			detailLabel.stringValue = liveText.isEmpty ? (detail.isEmpty ? "Finalizing text" : detail) : liveText
+			detailLabel.stringValue = detail.isEmpty ? "Finalizing text" : detail
 			timeLabel.stringValue = elapsedText(from: startedAt)
 			levelMeter.isHidden = true
 		case "downloading", "loading":
@@ -448,7 +456,7 @@ final class HudController: NSObject, NSApplicationDelegate {
 		if finalStatusStartedAt == nil {
 			finalStatusStartedAt = Date()
 		}
-		if let started = finalStatusStartedAt, Date().timeIntervalSince(started) > 1.4 {
+		if let started = finalStatusStartedAt, Date().timeIntervalSince(started) > (lastStatus == "error" ? 6 : 1.4) {
 			NSApp.terminate(nil)
 		}
 	}
@@ -474,7 +482,7 @@ private func runLayoutSelfTest() {
 	precondition(hardwareLayout.isAttachedToHardwareNotch)
 	precondition(hardwareLayout.hardwareNotchRect?.width == 220)
 	precondition(hardwareLayout.windowFrame.width == 480)
-	precondition(hardwareLayout.windowFrame.height == 66)
+	precondition(hardwareLayout.windowFrame.height == 104)
 	precondition(hardwareLayout.windowFrame.maxY == notchedScreen.frame.maxY)
 
 	let regularScreen = HudScreenGeometry(
@@ -487,7 +495,7 @@ private func runLayoutSelfTest() {
 	let fallbackLayout = HudLayout.make(for: regularScreen)
 	precondition(!fallbackLayout.isAttachedToHardwareNotch)
 	precondition(fallbackLayout.windowFrame.size == HudLayout.fallbackSize)
-	precondition(fallbackLayout.windowFrame.origin == NSPoint(x: 792, y: 1014))
+	precondition(fallbackLayout.windowFrame.origin == NSPoint(x: 720, y: 970))
 	print("Speek HUD layout self-test passed.")
 }
 

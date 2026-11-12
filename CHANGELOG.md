@@ -4,6 +4,8 @@ Public releases follow [Semantic Versioning](https://semver.org/). Version numbe
 
 ## [Unreleased]
 
+- Separate HUD transcript text from smaller status messages below it; give errors a distinct color and longer reading time, with spacing for notch and regular screens.
+
 - Leave ASR context empty by default to avoid instruction text leaking into recognition results. Explicit custom ASR prompts remain supported.
 
 - Fix unresponsive status menus when enabling native Fn or DJI by removing modal guidance dialogs from the toggle actions.
