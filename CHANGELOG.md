@@ -4,6 +4,8 @@ Public releases follow [Semantic Versioning](https://semver.org/). Version numbe
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-11-12
+
 - Remove native Fn/DJI mode switches from the menu. Input starts automatically with the app; old disabled preferences no longer suppress input.
 
 ## [0.3.1] - 2026-11-12
