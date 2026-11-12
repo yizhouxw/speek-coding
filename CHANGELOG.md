@@ -4,6 +4,8 @@ Public releases follow [Semantic Versioning](https://semver.org/). Version numbe
 
 ## [Unreleased]
 
+- Add bilingual changelog pages directly on the product site.
+
 - Redesign the product site with a midnight-blue palette and clearer action contrast.
 
 - Provide separate English and Chinese product pages with a header language switch.

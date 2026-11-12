@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="SpeekCoding 是面向 macOS 的本地优先语音输入应用。自然表达、本地转写，保持编程思路。"><meta name="theme-color" content="#080f20"><title>更新日志 — SpeekCoding</title><link rel="stylesheet" href="style.css?v=20261112-4"></head>
+<body><header><a class="brand" href="zh.html">◉ SpeekCoding</a><nav aria-label="主导航"><a href="zh.html#workflow">使用方法</a><a href="zh.html#details">产品特点</a><a href="https://github.com/yizhouxw/speek-coding">GitHub ↗</a></nav><div class="language-switch" role="group" aria-label="语言"><a href="changelog.html" lang="en">English</a> <a href="changelog-zh.html" lang="zh-CN" aria-current="page">中文</a></div></header>
+<main class="changelog"><a class="text-link" href="zh.html">← 返回产品介绍</a><h1>更新日志</h1><p>公开版本遵循语义化版本规范。从整理后的首次公开发布开始，版本号从 <code>0.1.0</code> 重新计数。</p>
+<h2>未发布</h2>
+<ul>
+<li>新增站内中英文更新日志，按页面语言直接阅读。</li>
+<li>产品站点采用深蓝配色，强化主要操作的视觉对比。</li>
+<li>提供独立的中英文产品页面，在顶部切换语言。</li>
+<li>新增通过 GitHub Pages 发布的产品介绍站点。</li>
+</ul>
+<h2>[0.3.0] - 2026-11-12</h2>
+<ul>
+<li>默认启用原生 Fn 和按设备限定的 DJI HID 输入，无需安装 Karabiner。安装时迁移本项目托管的旧规则，保留其他映射设置。</li>
+<li>客户端与 HUD 辅助程序迁入 SpeekCoding 自己的配置目录。</li>
+<li>需要输入监控权限。正常退出恢复 DJI 映射，异常终止后下次启动执行恢复。睡眠唤醒、更多硬件与系统组合仍需扩大实测覆盖。</li>
+<li>发布附件仍为开发签名或未签名的安装包，尚未经过 Apple 公证。</li>
+<li>HUD 将转写文字与下方的小字号状态提示分开；错误使用独立颜色并延长显示时间，同时优化刘海屏和普通屏幕的间距。</li>
+<li>默认不再传入 ASR 上下文提示词，避免提示词混入识别结果；仍支持显式配置自定义提示词。</li>
+<li>移除原生 Fn 和 DJI 开关中的模态说明窗口，修复开启后菜单无响应的问题。</li>
+<li>新增原生 DJI 输入与按设备限定的 UserKeyMapping；确认屏蔽映射后才允许触发，支持正常退出恢复与崩溃恢复记录。提供只读诊断及有界的写入、恢复诊断；实际按钮和音频兼容性仍需扩大验证。</li>
+<li>新增原生 Fn 触发、输入监控指引、权限恢复、旧 Fn 命令去重，以及组合键和长按取消。NativeInput 静态链接进入源码与安装包构建，并提供不记录输入内容的 Fn 诊断工具。首次配置无需 Karabiner。</li>
+<li>更新成功后清理已确认的旧应用副本与过期的启动服务注册，保留下载的模型和正在使用的 Python 环境。</li>
+<li>源码安装与更新保留应用图标。</li>
+<li>Apple 芯片的 Qwen 后端使用本地小语言模型纠错，替代针对特定示例的转写规则；新增可保存的智能纠错开关、独立的语音与文本模型下载和选择菜单。纠错失败时将原文复制到剪贴板，不自动发送。</li>
+<li>打开麦克风前准备本地转写模型，显示初始化进度，允许通过 Fn 或 HUD 取消。初始化失败时不录音，可重试。</li>
+</ul>
+<h2>[0.2.0] - 2026-11-06</h2>
+<ul>
+<li>新增本地化许可证菜单与可调整大小、选择文字和滚动的许可证窗口，支持确认、关闭、回车、退出键与窗口关闭按钮。</li>
+<li>打包项目、上游模型权重以及开源依赖和运行时许可证；签名前收集实际依赖，并在 GitHub Release 附加各架构的许可证文档。</li>
+<li>Apple 芯片默认使用本地 Qwen3-ASR-0.6B 四位量化模型与 MLX，HUD 支持可修订的实时转写，停止后输出最终文字。Apple 芯片安装包要求 macOS 14，Intel 继续使用 Whisper 并支持 macOS 13。</li>
+<li>新增有序且容量受限的本地 PCM 会话、取消和文件转写恢复机制，打包固定版本的 MLX 依赖。已有安装在主动切换前保留原引擎。</li>
+<li>包元数据与版权声明将项目作者标为 yizhouxw，同时保留上游 John Yin 的版权声明并明确归属。</li>
+</ul>
+<h2>[0.1.1] - 2026-11-04</h2>
+<ul>
+<li>菜单和对话框支持英文、简体中文及繁体中文；默认跟随 macOS 语言偏好，可在功能设置中保存语言选择。</li>
+<li>发布为常规 GitHub Release 并标记为最新版本。带 <code>-dev-</code> 的安装包仍是开发构建，没有 Developer ID 签名或公证。</li>
+</ul>
+<h2>[0.1.0] - 2026-11-04</h2>
+<ul>
+<li>首次以 MIT 许可证公开源码，提供默认英文说明与完整中文指南。</li>
+<li>原生 macOS 菜单栏应用，支持录音、本地优先转写、剪贴板输出，以及粘贴到录音开始时使用的应用。</li>
+<li>本地 faster-whisper 运行时，可选 whisper.cpp 和兼容 OpenAI 的转写接口；模型下载与加载提供进度和取消操作。</li>
+<li>当时通过 Karabiner-Elements 实现 Fn 单击与可选 DJI Mic Mini 按钮触发；Fn+F12 等组合键保留原行为。</li>
+<li>麦克风选择、权限指引、录音 HUD，以及控制粘贴后是否按回车的自动发送设置。</li>
+<li>每用户鉴权 IPC、仅监听本机回环地址的 ASR、临时录音清理与稳定的本地开发签名。</li>
+<li>提供独立的实验性 NativeInput Swift 库及状态测试；当时尚未接入应用，也不能替代 Karabiner。</li>
+<li>提供 Apple 芯片和 Intel 开发安装包及 SHA-256 校验和。安装包未签名、未公证；干净 CI 环境中的应用使用临时签名。该版本标记为开发预发布。</li>
+</ul>
+<h3>当时的已知限制</h3>
+<ul>
+<li>要求 macOS 13 或更高版本。测试和构建通过不代表兼容全部键盘、DJI 固件或系统权限配置。</li>
+<li>Whisper 模型权重首次使用时单独下载，不包含在安装包中。</li>
+<li>开发包缺少 Developer ID 分发签名及公证，系统可能阻止安装或运行，升级后可能需要重新授权。</li>
+<li>早期私有版本号、标签与下载不属于该公开版本序列。采用不同签名身份的已有开发安装需要单独验证升级。</li>
+</ul></main><footer><a class="brand" href="#">◉ SpeekCoding</a><p>少一点打字，多一点思考。</p><a href="https://github.com/yizhouxw/speek-coding/issues">反馈问题 ↗</a></footer></body></html>
