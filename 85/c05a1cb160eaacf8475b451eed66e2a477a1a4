@@ -1,0 +1,27 @@
+.github/workflows/pages.yml
+  s_d1acf170903776::t_fc62ae48ea0b63 1-28
+CHANGELOG.md
+  s_d1acf170903776::t_fba587d2a97464 7-8,22,24
+docs/RELEASING.md
+  s_d1acf170903776::t_6045aa00e06386 75-80
+website/index.html
+  s_d1acf170903776::t_accc69619cdbaf 1-8
+website/style.css
+  s_d1acf170903776::t_2707ec719e6d81 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "85c05a1cb160eaacf8475b451eed66e2a477a1a4",
+  "prompts": {},
+  "sessions": {
+    "s_d1acf170903776": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1ce5e-ec74-7d63-93d0-e7b3d20f393d",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "yizhouxw <54161870+yizhouxw@users.noreply.github.com>"
+    }
+  }
+}
